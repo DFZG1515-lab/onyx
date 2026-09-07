@@ -9,6 +9,8 @@
 .fondo-green { background: var(--green); }
 .fondo-wine { background: var(--wine); }
 .fondo-slate { background: var(--slate); }
+.tono-amber { color: var(--amber); }
+.fondo-amber { background: var(--amber); }
 
 /* Botones */
 .primario {
@@ -20,7 +22,7 @@
   color: var(--paper);
   font-weight: 500;
 }
-.primario:disabled { background: var(--muted); }
+.primario:disabled { opacity: 0.35; cursor: default; }
 
 .enlace {
   padding: var(--espacio-2) 0;
@@ -92,8 +94,8 @@ select.entrada { appearance: none; -webkit-appearance: none; }
 .fila__accion { flex-shrink: 0; white-space: nowrap; }
 
 /* Barra de 3px */
-.barra { width: 100%; height: var(--grosor-barra); background: var(--rule); }
-.barra__relleno { height: 100%; transition: width var(--duracion) var(--curva); }
+.barra { width: 100%; height: var(--grosor-barra); background: var(--rule); border-radius: var(--radio-barra); overflow: hidden; }
+.barra__relleno { height: 100%; border-radius: var(--radio-barra); transition: width var(--duracion) var(--curva); }
 .fila .barra { margin-bottom: var(--espacio-3); }
 
 /* Deslizable */
@@ -135,7 +137,7 @@ select.entrada { appearance: none; -webkit-appearance: none; }
   align-items: flex-end;
 }
 .hoja:not([open]) { display: none; }
-.hoja::backdrop { background: rgba(23, 26, 31, 0.4); }
+.hoja::backdrop { background: var(--velo); }
 .hoja__panel {
   width: 100%;
   max-height: 90dvh;

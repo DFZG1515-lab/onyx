@@ -116,7 +116,7 @@
   color: var(--paper);
   font-weight: 500;
 }
-.captura__guardar:disabled { background: var(--muted); }
+.captura__guardar:disabled { opacity: 0.35; cursor: default; }
 .chips {
   display: flex;
   gap: var(--espacio-2);
@@ -130,6 +130,7 @@
   min-height: 32px;
   padding: 0 var(--espacio-3);
   border: var(--grosor-regla) solid var(--rule);
+  border-radius: var(--radio-chip);
   color: var(--ink);
   font-size: var(--meta-tamano);
 }

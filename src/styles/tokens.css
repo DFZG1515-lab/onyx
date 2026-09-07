@@ -1,16 +1,26 @@
-/* Tokens de diseño. Concepto: libro contable, no dashboard. */
+/*
+ * Tokens de diseño. Concepto: libro contable, no dashboard.
+ * Los colores de ambos modos son valores finales; los verifica src/styles/tokens.test.ts.
+ * Las variantes "tenue" son el mismo color al 12% para fondos de chips y avisos.
+ */
 :root {
   color-scheme: light;
 
-  /* Color */
   --paper: #F1F2F0;
   --surface: #FFFFFF;
   --ink: #171A1F;
   --muted: #767B72;
   --rule: rgba(23, 26, 31, 0.10);
-  --green: #1F5F4A;
-  --wine: #8C2F39;
-  --slate: #3B4A6B;
+  --green: #0F6E56;
+  --wine: #A32D2D;
+  --slate: #534AB7;
+  --amber: #854F0B;
+
+  --green-tenue: rgba(15, 110, 86, 0.12);
+  --wine-tenue: rgba(163, 45, 45, 0.12);
+  --slate-tenue: rgba(83, 74, 183, 0.12);
+  --amber-tenue: rgba(133, 79, 11, 0.12);
+  --velo: rgba(23, 26, 31, 0.40);
 
   /* Tipografía: una sola familia */
   --fuente: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -42,23 +52,53 @@
   --grosor-regla: 1px;
   --grosor-barra: 3px;
 
+  /* Esquinas: solo chips y barras las llevan redondeadas */
+  --radio-chip: 999px;
+  --radio-barra: 2px;
+
   /* Movimiento: solo como respuesta a una acción */
   --duracion: 160ms;
   --curva: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Modo oscuro por preferencia del sistema, salvo que el usuario fuerce el claro. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema='claro']) {
     color-scheme: dark;
-    --paper: #171A1F;
-    --surface: #1F2329;
-    --ink: #F1F2F0;
-    --muted: #9AA096;
-    --rule: rgba(241, 242, 240, 0.12);
-    --green: #5FB08E;
-    --wine: #D9707B;
-    --slate: #93A6D1;
+    --paper: #16181B;
+    --surface: #1E2126;
+    --ink: #EDEEEA;
+    --muted: #8B908A;
+    --rule: rgba(237, 238, 234, 0.12);
+    --green: #5DCAA5;
+    --wine: #F09595;
+    --slate: #AFA9EC;
+    --amber: #EF9F27;
+    --green-tenue: rgba(93, 202, 165, 0.12);
+    --wine-tenue: rgba(240, 149, 149, 0.12);
+    --slate-tenue: rgba(175, 169, 236, 0.12);
+    --amber-tenue: rgba(239, 159, 39, 0.12);
+    --velo: rgba(0, 0, 0, 0.60);
   }
+}
+
+/* Modo oscuro forzado desde ajustes. Mismos valores que arriba. */
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+  --paper: #16181B;
+  --surface: #1E2126;
+  --ink: #EDEEEA;
+  --muted: #8B908A;
+  --rule: rgba(237, 238, 234, 0.12);
+  --green: #5DCAA5;
+  --wine: #F09595;
+  --slate: #AFA9EC;
+  --amber: #EF9F27;
+  --green-tenue: rgba(93, 202, 165, 0.12);
+  --wine-tenue: rgba(240, 149, 149, 0.12);
+  --slate-tenue: rgba(175, 169, 236, 0.12);
+  --amber-tenue: rgba(239, 159, 39, 0.12);
+  --velo: rgba(0, 0, 0, 0.60);
 }
 
 @media (prefers-reduced-motion: reduce) {

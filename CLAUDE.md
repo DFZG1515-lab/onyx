@@ -27,7 +27,7 @@ Los tres colores semánticos suben de tono en oscuro para mantener contraste AA 
 ## Tipografía
 
 - Schibsted Grotesk como única familia, autoalojada en `public/fonts`, pesos 400, 500 y 600.
-- `tabular-nums` en todos los números para que las columnas de pesos alineen.
+- Dígitos tabulares en todos los montos, aplicados solo a las corridas de dígitos con la clase `.num` a través del componente `Monto`. No usar `tabular-nums` global: en Schibsted Grotesk esa función también ensancha punto, coma y dos puntos y separa la puntuación ("$1 , 333"). Medido en Chrome.
 - Escala: monto héroe 62px/500 con `letter-spacing: -0.035em`; encabezados de sección 15px/500; cuerpo 15px/400; metadatos 12px/400.
 - Todo en formato de oración. Nunca mayúsculas completas, ni siquiera en etiquetas.
 
