@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { idDeCiclo } from '../lib/ciclos'
-import { calcularPresupuesto, type Presupuesto } from '../lib/presupuesto'
+import { diasDelCiclo, idDeCiclo } from '../lib/ciclos'
+import { calcularPresupuesto, calcularRitmo, type Presupuesto, type Ritmo } from '../lib/presupuesto'
 import type { Ciclo } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
 import { useAhora } from './useAhora'
@@ -20,11 +20,22 @@ export function useCicloActual(): { hoy: number; ciclo: Ciclo | null } {
   return { hoy, ciclo }
 }
 
-export function usePresupuesto(): { hoy: number; ciclo: Ciclo; presupuesto: Presupuesto } | null {
+export type DatosResumen = { hoy: number; ciclo: Ciclo; presupuesto: Presupuesto; ritmo: Ritmo; diasTotales: number }
+
+export function usePresupuesto(): DatosResumen | null {
   const { hoy, ciclo } = useCicloActual()
   const gastos = useTienda((s) => s.gastos)
   const comprasMSI = useTienda((s) => s.comprasMSI)
   const gastosFijos = useTienda((s) => s.gastosFijos)
   if (!ciclo) return null
-  return { hoy, ciclo, presupuesto: calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos }) }
+  const presupuesto = calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos })
+  const diasTotales = diasDelCiclo(ciclo)
+  // El ritmo compara solo gastos reales: lo comprometido ya está descontado del disponible.
+  const ritmo = calcularRitmo({
+    ingreso: presupuesto.ingreso,
+    gastado: presupuesto.gastado,
+    diasTranscurridos: diasTotales - presupuesto.diasRestantes + 1,
+    diasTotales,
+  })
+  return { hoy, ciclo, presupuesto, ritmo, diasTotales }
 }

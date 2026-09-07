@@ -80,3 +80,25 @@ export function gastoPorCategoria(gastos: Gasto[]): FilaCategoria[] {
     .map(([categoriaId, total]) => ({ categoriaId, total }))
     .sort((a, b) => b.total - a.total)
 }
+
+/**
+ * Ritmo: ¿voy adelantado o atrasado respecto a gastar el ingreso de forma pareja?
+ * El día en curso cuenta como transcurrido, así el día 1 tiene permitido 1/n del ingreso.
+ */
+export type EstadoRitmo = 'bien' | 'justo' | 'excedido'
+
+export type Ritmo = {
+  esperadoHastaHoy: number
+  diferencia: number
+  estado: EstadoRitmo
+}
+
+export type EntradaRitmo = { ingreso: number; gastado: number; diasTranscurridos: number; diasTotales: number }
+
+export function calcularRitmo({ ingreso, gastado, diasTranscurridos, diasTotales }: EntradaRitmo): Ritmo {
+  const fraccion = diasTotales > 0 ? Math.min(1, Math.max(0, diasTranscurridos / diasTotales)) : 1
+  const esperadoHastaHoy = Math.round(ingreso * fraccion)
+  const diferencia = esperadoHastaHoy - gastado
+  const estado: EstadoRitmo = diferencia >= 0 ? 'bien' : diferencia >= -ingreso * 0.1 ? 'justo' : 'excedido'
+  return { esperadoHastaHoy, diferencia, estado }
+}

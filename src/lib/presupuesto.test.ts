@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { cicloDesdeId } from './ciclos'
-import { calcularPresupuesto, fijosPendientes, gastoPorCategoria } from './presupuesto'
+import { calcularPresupuesto, calcularRitmo, fijosPendientes, gastoPorCategoria } from './presupuesto'
 import type { CompraMSI, Gasto, GastoFijo } from './tipos'
 
 const fecha = (a: number, m: number, d: number, h = 12) => new Date(a, m - 1, d, h).getTime()
@@ -150,5 +150,54 @@ describe('fijos ya pagados en este ciclo', () => {
   test('el pago de un ciclo anterior no cuenta para este', () => {
     const rentaPagadaAntes: GastoFijo = { ...renta, ultimoPago: '2026-08-Q1' }
     expect(fijosPendientes([rentaPagadaAntes], q1, fecha(2026, 9, 5))).toBe(800_000)
+  })
+})
+
+describe('calcularRitmo', () => {
+  const ingreso = 1_500_000
+
+  test('día 1: el permitido es un quinceavo del ingreso y sin gasto vas bien', () => {
+    const r = calcularRitmo({ ingreso, gastado: 0, diasTranscurridos: 1, diasTotales: 15 })
+    expect(r.esperadoHastaHoy).toBe(100_000)
+    expect(r.diferencia).toBe(100_000)
+    expect(r.estado).toBe('bien')
+  })
+
+  test('último día: el esperado es todo el ingreso', () => {
+    const r = calcularRitmo({ ingreso, gastado: 1_400_000, diasTranscurridos: 15, diasTotales: 15 })
+    expect(r.esperadoHastaHoy).toBe(ingreso)
+    expect(r.diferencia).toBe(100_000)
+    expect(r.estado).toBe('bien')
+  })
+
+  test('gasto cero a mitad de quincena', () => {
+    const r = calcularRitmo({ ingreso, gastado: 0, diasTranscurridos: 7, diasTotales: 15 })
+    expect(r.esperadoHastaHoy).toBe(700_000)
+    expect(r.estado).toBe('bien')
+  })
+
+  test('justo: entre cero y menos el 10 por ciento del ingreso, inclusive', () => {
+    const esperado = 700_000
+    expect(calcularRitmo({ ingreso, gastado: esperado + 1, diasTranscurridos: 7, diasTotales: 15 }).estado).toBe('justo')
+    expect(calcularRitmo({ ingreso, gastado: esperado + 150_000, diasTranscurridos: 7, diasTotales: 15 }).estado).toBe('justo')
+  })
+
+  test('excedido: más allá del 10 por ciento del ingreso', () => {
+    const r = calcularRitmo({ ingreso, gastado: 700_000 + 150_001, diasTranscurridos: 7, diasTotales: 15 })
+    expect(r.estado).toBe('excedido')
+    expect(r.diferencia).toBe(-150_001)
+  })
+
+  test('quincena de 16 días reparte el ingreso en dieciseisavos', () => {
+    const r = calcularRitmo({ ingreso: 1_600_000, gastado: 0, diasTranscurridos: 4, diasTotales: 16 })
+    expect(r.esperadoHastaHoy).toBe(400_000)
+  })
+
+  test('nunca espera más que el ingreso aunque los días se pasen', () => {
+    expect(calcularRitmo({ ingreso, gastado: 0, diasTranscurridos: 20, diasTotales: 15 }).esperadoHastaHoy).toBe(ingreso)
+  })
+
+  test('el esperado es un entero en centavos', () => {
+    expect(Number.isInteger(calcularRitmo({ ingreso: 1_000_001, gastado: 0, diasTranscurridos: 7, diasTotales: 15 }).esperadoHastaHoy)).toBe(true)
   })
 })
