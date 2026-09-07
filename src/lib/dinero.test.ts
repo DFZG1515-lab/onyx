@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { pesos, pesosACentavos } from './dinero'
+import { pesos, pesosACentavos, segmentarDigitos } from './dinero'
 
 describe('pesos', () => {
   test('formatea centavos como pesos mexicanos', () => {
@@ -32,5 +32,23 @@ describe('pesosACentavos', () => {
     expect(pesosACentavos('')).toBeNull()
     expect(pesosACentavos('-5')).toBeNull()
     expect(pesosACentavos('0')).toBeNull()
+  })
+})
+
+describe('segmentarDigitos', () => {
+  test('separa corridas de dígitos del resto del texto', () => {
+    expect(segmentarDigitos('$1,250.50')).toEqual([
+      { digitos: false, texto: '$' },
+      { digitos: true, texto: '1' },
+      { digitos: false, texto: ',' },
+      { digitos: true, texto: '250' },
+      { digitos: false, texto: '.' },
+      { digitos: true, texto: '50' },
+    ])
+  })
+
+  test('un texto sin dígitos queda en un solo segmento', () => {
+    expect(segmentarDigitos('$')).toEqual([{ digitos: false, texto: '$' }])
+    expect(segmentarDigitos('')).toEqual([])
   })
 })

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { crearAjustesSlice, type AjustesSlice } from './ajustes'
 import { crearCategoriasSlice, type CategoriasSlice } from './categorias'
 import { crearCiclosSlice, type CiclosSlice } from './ciclos'
 import { crearFijosSlice, type FijosSlice } from './fijos'
@@ -15,7 +16,7 @@ type Arranque = {
  * Única fuente de verdad en memoria. Cada acción escribe en Dexie primero
  * y después refleja el cambio aquí; así la UI nunca muestra algo que no esté guardado.
  */
-export type Tienda = GastosSlice & CategoriasSlice & CiclosSlice & FijosSlice & MsiSlice & Arranque
+export type Tienda = GastosSlice & CategoriasSlice & CiclosSlice & FijosSlice & MsiSlice & AjustesSlice & Arranque
 
 export const useTienda = create<Tienda>()((...a) => {
   const [set, get] = a
@@ -25,10 +26,11 @@ export const useTienda = create<Tienda>()((...a) => {
     ...crearCiclosSlice(...a),
     ...crearFijosSlice(...a),
     ...crearMsiSlice(...a),
+    ...crearAjustesSlice(...a),
     listo: false,
     cargarTodo: async () => {
-      const { cargarGastos, cargarCategorias, cargarCiclos, cargarFijos, cargarMSI } = get()
-      await Promise.all([cargarGastos(), cargarCategorias(), cargarCiclos(), cargarFijos(), cargarMSI()])
+      const { cargarGastos, cargarCategorias, cargarCiclos, cargarFijos, cargarMSI, cargarAjustes } = get()
+      await Promise.all([cargarGastos(), cargarCategorias(), cargarCiclos(), cargarFijos(), cargarMSI(), cargarAjustes()])
       set({ listo: true })
     },
   }

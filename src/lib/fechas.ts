@@ -47,3 +47,17 @@ export function mesCorto(fecha: number): string {
   const d = new Date(fecha)
   return `${MESES_CORTOS[d.getMonth()] ?? ''} ${d.getFullYear()}`
 }
+
+/** Epoch ms → "AAAA-MM-DD" en hora local, para <input type="date">. */
+export function aFechaInput(fecha: number): string {
+  const d = new Date(fecha)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** "AAAA-MM-DD" → epoch ms al mediodía local. Null si el texto no es una fecha. */
+export function deFechaInput(texto: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto)
+  if (!m) return null
+  const ms = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12).getTime()
+  return Number.isNaN(ms) ? null : ms
+}

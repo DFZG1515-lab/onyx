@@ -19,3 +19,14 @@ export function pesosACentavos(texto: string): number | null {
   const total = enteros * 100 + centavos
   return total > 0 ? total : null
 }
+
+export type Segmento = { digitos: boolean; texto: string }
+
+/** Separa corridas de dígitos del resto, para aplicar dígitos tabulares solo a los números. */
+export function segmentarDigitos(texto: string): Segmento[] {
+  const segmentos: Segmento[] = []
+  for (const parte of texto.match(/\d+|\D+/g) ?? []) {
+    segmentos.push({ digitos: /^\d/.test(parte), texto: parte })
+  }
+  return segmentos
+}

@@ -50,3 +50,9 @@ export type CompraMSI = {
   fechaCompra: number
   pagosHechos: number
 }
+
+export type Ajustes = {
+  id: 'ajustes'
+  /** Ingreso por quincena que se usa al abrir cada ciclo nuevo. */
+  ingresoQuincenal: number
+}

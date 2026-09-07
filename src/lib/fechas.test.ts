@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { cicloDesdeId } from './ciclos'
-import { etiquetaDia, fechaCorta, fechaLarga, rangoDeCiclo } from './fechas'
+import { aFechaInput, deFechaInput, etiquetaDia, fechaCorta, fechaLarga, rangoDeCiclo } from './fechas'
 
 const fecha = (a: number, m: number, d: number, h = 12) => new Date(a, m - 1, d, h).getTime()
 const hoy = fecha(2026, 9, 7)
@@ -32,5 +32,18 @@ describe('fechaCorta y fechaLarga', () => {
 
   test('fecha larga: día, mes y año', () => {
     expect(fechaLarga(fecha(2027, 9, 15))).toBe('15 de septiembre de 2027')
+  })
+})
+
+describe('aFechaInput y deFechaInput', () => {
+  test('convierte a y desde el formato del campo de fecha nativo', () => {
+    expect(aFechaInput(fecha(2026, 9, 7))).toBe('2026-09-07')
+    expect(aFechaInput(fecha(2026, 1, 3))).toBe('2026-01-03')
+    expect(deFechaInput('2026-09-07')).toBe(fecha(2026, 9, 7))
+  })
+
+  test('un texto inválido devuelve null', () => {
+    expect(deFechaInput('')).toBeNull()
+    expect(deFechaInput('hola')).toBeNull()
   })
 })
