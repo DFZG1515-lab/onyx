@@ -1,0 +1,68 @@
+/* Tokens de diseño. Concepto: libro contable, no dashboard. */
+:root {
+  color-scheme: light;
+
+  /* Color */
+  --paper: #F1F2F0;
+  --surface: #FFFFFF;
+  --ink: #171A1F;
+  --muted: #767B72;
+  --rule: rgba(23, 26, 31, 0.10);
+  --green: #1F5F4A;
+  --wine: #8C2F39;
+  --slate: #3B4A6B;
+
+  /* Tipografía: una sola familia */
+  --fuente: 'Schibsted Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --heroe-tamano: 62px;
+  --heroe-peso: 500;
+  --heroe-espaciado: -0.035em;
+  --heroe-interlineado: 1;
+
+  --seccion-tamano: 15px;
+  --seccion-peso: 500;
+
+  --cuerpo-tamano: 15px;
+  --cuerpo-peso: 400;
+  --cuerpo-interlineado: 1.45;
+
+  --meta-tamano: 12px;
+  --meta-peso: 400;
+
+  /* Layout */
+  --ancho-max: 420px;
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 12px;
+  --espacio-4: 16px;
+  --espacio-5: 24px;
+  --espacio-6: 32px;
+  --espacio-7: 48px;
+  --grosor-regla: 1px;
+  --grosor-barra: 3px;
+
+  /* Movimiento: solo como respuesta a una acción */
+  --duracion: 160ms;
+  --curva: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #171A1F;
+    --surface: #1F2329;
+    --ink: #F1F2F0;
+    --muted: #9AA096;
+    --rule: rgba(241, 242, 240, 0.12);
+    --green: #5FB08E;
+    --wine: #D9707B;
+    --slate: #93A6D1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duracion: 0ms;
+  }
+}
