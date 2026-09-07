@@ -1,3 +1,4 @@
+import { pesosACentavos } from './dinero'
 import type { Categoria, Metodo } from './tipos'
 
 /**
@@ -29,7 +30,6 @@ const METODOS: Record<string, Metodo> = {
   debito: 'tarjeta',
 }
 
-const PATRON_MONTO = /^\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?$/
 const PATRON_MSI_PEGADO = /^(\d{1,2})msi$/
 const PATRON_MESES = /^\d{1,2}$/
 const PALABRAS_MESES = new Set(['msi', 'meses'])
@@ -39,14 +39,6 @@ export function normalizar(texto: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-}
-
-function montoEnCentavos(token: string): number | null {
-  const m = PATRON_MONTO.exec(token)
-  if (!m) return null
-  const enteros = Number(m[1]?.replace(/,/g, '') ?? '0')
-  const centavos = Number((m[2] ?? '').padEnd(2, '0'))
-  return enteros * 100 + centavos
 }
 
 function extraerMeses(tokens: string[], usados: boolean[]): number | null {
@@ -84,7 +76,7 @@ function extraerMonto(tokens: string[], usados: boolean[]): number | null {
   let mayor: number | null = null
   tokens.forEach((token, i) => {
     if (usados[i]) return
-    const monto = montoEnCentavos(token)
+    const monto = pesosACentavos(token)
     if (monto === null) return
     usados[i] = true
     if (mayor === null || monto > mayor) mayor = monto

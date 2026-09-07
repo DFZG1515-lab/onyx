@@ -140,3 +140,15 @@ describe('gastoPorCategoria', () => {
     expect(gastoPorCategoria([])).toEqual([])
   })
 })
+
+describe('fijos ya pagados en este ciclo', () => {
+  test('un fijo marcado como pagado en el ciclo deja de estar comprometido', () => {
+    const rentaPagada: GastoFijo = { ...renta, ultimoPago: q1.id }
+    expect(fijosPendientes([rentaPagada], q1, fecha(2026, 9, 5))).toBe(0)
+  })
+
+  test('el pago de un ciclo anterior no cuenta para este', () => {
+    const rentaPagadaAntes: GastoFijo = { ...renta, ultimoPago: '2026-08-Q1' }
+    expect(fijosPendientes([rentaPagadaAntes], q1, fecha(2026, 9, 5))).toBe(800_000)
+  })
+})

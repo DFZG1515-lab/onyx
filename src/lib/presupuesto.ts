@@ -39,10 +39,10 @@ function fechaDeCobro(fijo: GastoFijo, ciclo: Ciclo): number {
   return new Date(inicio.getFullYear(), inicio.getMonth(), Math.min(fijo.diaDelMes, ultimoDia)).getTime()
 }
 
-/** Suma de fijos activos que caen en este ciclo y cuyo día de cobro es hoy o después. */
+/** Suma de fijos activos que caen en este ciclo, aún no marcados como pagados, y cuyo día de cobro es hoy o después. */
 export function fijosPendientes(fijos: GastoFijo[], ciclo: Ciclo, hoy: number): number {
   return fijos
-    .filter((f) => f.activo)
+    .filter((f) => f.activo && f.ultimoPago !== ciclo.id)
     .filter((f) => {
       const cobro = fechaDeCobro(f, ciclo)
       return cobro >= ciclo.inicio && cobro <= ciclo.fin && diaCalendario(cobro) >= diaCalendario(hoy)

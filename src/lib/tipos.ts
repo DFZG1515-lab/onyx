@@ -38,6 +38,8 @@ export type GastoFijo = {
   monto: number
   diaDelMes: number
   activo: boolean
+  /** Id del último ciclo en el que el usuario marcó este fijo como pagado. */
+  ultimoPago?: string
 }
 
 export type CompraMSI = {
