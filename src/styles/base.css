@@ -15,7 +15,6 @@ html {
   font-size: var(--cuerpo-tamano);
   font-weight: var(--cuerpo-peso);
   line-height: var(--cuerpo-interlineado);
-  font-variant-numeric: tabular-nums;
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
 }
@@ -49,6 +48,7 @@ small,
 }
 
 .heroe {
+  display: block;
   font-size: var(--heroe-tamano);
   font-weight: var(--heroe-peso);
   letter-spacing: var(--heroe-espaciado);
@@ -63,6 +63,14 @@ textarea {
   color: inherit;
   background: none;
   border: 0;
+}
+
+/*
+ * Dígitos tabulares solo en corridas de dígitos. En Schibsted Grotesk la función
+ * tabular también ensancha el punto, la coma y los dos puntos, así que aplicarla
+ * a todo el texto separa la puntuación. El componente Monto envuelve los dígitos.
+ */
+.num {
   font-variant-numeric: tabular-nums;
 }
 
