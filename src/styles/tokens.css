@@ -59,6 +59,7 @@
 
   /* Movimiento: solo como respuesta a una acción */
   --duracion: 160ms;
+  --duracion-larga: 600ms;
   --curva: cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -105,5 +106,6 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duracion: 0ms;
+    --duracion-larga: 0ms;
   }
 }

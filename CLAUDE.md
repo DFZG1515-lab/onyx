@@ -38,7 +38,7 @@ Los tres colores semánticos suben de tono en oscuro para mantener contraste AA 
 - Cero sombras, cero gradientes. Cero esquinas redondeadas salvo en chips y barras de progreso.
 - Un solo elemento con voz alta por pantalla: el monto grande.
 - Ancho máximo de contenido 420px, centrado.
-- Movimiento solo como respuesta a una acción del usuario. Respetar `prefers-reduced-motion`.
+- Movimiento con dos permisos: una animación de entrada al abrir la app, una sola vez por sesión (el monto cuenta hasta su valor, el anillo se dibuja, las filas entran en cascada de 30 ms), y respuestas a acciones del usuario (guardar, borrar, cambiar de pantalla, cambio de estado). Nunca al hacer scroll ni al volver a una pestaña. Todo se apaga con `prefers-reduced-motion`. Duraciones: 160 ms para respuestas, 600 ms para la entrada.
 
 ## Copy
 
