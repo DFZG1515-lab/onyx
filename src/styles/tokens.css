@@ -51,6 +51,7 @@
   --espacio-7: 48px;
   --grosor-regla: 1px;
   --grosor-barra: 3px;
+  --nav-altura: 56px;
 
   /* Esquinas: solo chips y barras las llevan redondeadas */
   --radio-chip: 999px;
