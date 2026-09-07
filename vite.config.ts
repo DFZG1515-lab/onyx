@@ -26,6 +26,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        // Los íconos del manifest ya entran al precache por su cuenta.
+        globIgnores: ['**/icono-*.png'],
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,
       },
