@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
-export type Tono = 'ink' | 'muted' | 'green' | 'wine' | 'slate'
+export type Tono = 'ink' | 'muted' | 'green' | 'wine' | 'slate' | 'amber'
 
 type Props = {
   titulo: ReactNode
@@ -10,10 +10,13 @@ type Props = {
   onClick?: () => void
   /** Contenido extra debajo del renglón, por ejemplo una barra de avance. */
   pie?: ReactNode
+  /** Posición en la lista, para la animación en cascada. */
+  indice?: number
 }
 
 /** Un renglón de libro contable: texto a la izquierda, monto alineado a la derecha, línea de 1px abajo. */
-export function Fila({ titulo, meta, monto, tono = 'ink', onClick, pie }: Props) {
+export function Fila({ titulo, meta, monto, tono = 'ink', onClick, pie, indice }: Props) {
+  const estilo = indice === undefined ? undefined : ({ '--i': indice } as CSSProperties)
   const cuerpo = (
     <>
       <div className="fila__renglon">
@@ -28,10 +31,14 @@ export function Fila({ titulo, meta, monto, tono = 'ink', onClick, pie }: Props)
   )
   if (onClick) {
     return (
-      <button type="button" className="fila fila--boton" onClick={onClick}>
+      <button type="button" className="fila fila--boton" style={estilo} onClick={onClick}>
         {cuerpo}
       </button>
     )
   }
-  return <div className="fila">{cuerpo}</div>
+  return (
+    <div className="fila" style={estilo}>
+      {cuerpo}
+    </div>
+  )
 }

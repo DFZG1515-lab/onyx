@@ -8,6 +8,9 @@ type EstadoUI = {
   aviso: string | null
   mostrarAviso: (texto: string) => void
   ocultarAviso: () => void
+  /** true después de la primera animación de entrada; no se repite en la sesión. */
+  entradaHecha: boolean
+  marcarEntrada: () => void
 }
 
 export const useUI = create<EstadoUI>()((set) => ({
@@ -17,4 +20,6 @@ export const useUI = create<EstadoUI>()((set) => ({
   aviso: null,
   mostrarAviso: (texto) => set({ aviso: texto }),
   ocultarAviso: () => set({ aviso: null }),
+  entradaHecha: false,
+  marcarEntrada: () => set({ entradaHecha: true }),
 }))
