@@ -62,7 +62,7 @@ export function idsSiguientes(id: string, n: number): string[] {
 }
 
 /** Día calendario como entero, inmune al horario de verano. */
-function diaCalendario(fecha: number): number {
+export function diaCalendario(fecha: number): number {
   const d = new Date(fecha)
   return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000)
 }
