@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AvisoInstalacion } from '../componentes/AvisoInstalacion'
 import { Barra } from '../componentes/Barra'
 import { Fila } from '../componentes/Fila'
 import { Monto } from '../componentes/Monto'
@@ -74,6 +75,8 @@ export function Resumen() {
           </button>
         </div>
       </section>
+
+      <AvisoInstalacion />
 
       <section className="seccion">
         <h2 className="seccion__titulo">Gastado por categoría</h2>

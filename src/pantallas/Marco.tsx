@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Captura } from '../componentes/Captura'
+import { AvisoActualizacion, IndicadorConexion } from '../componentes/EstadoConexion'
 import { useCicloActual } from '../hooks/usePresupuesto'
 import { RUTAS } from '../rutas'
 import { useTienda } from '../store/tienda'
@@ -28,7 +29,9 @@ export function Marco() {
         <NavLink to={RUTAS.msi} className={clasePestana}>
           Meses sin intereses
         </NavLink>
+        <IndicadorConexion />
       </nav>
+      <AvisoActualizacion />
       <main className="contenido">
         <Outlet />
       </main>

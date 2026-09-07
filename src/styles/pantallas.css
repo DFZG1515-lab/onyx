@@ -148,3 +148,29 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
+
+/* PWA: conexión, actualización e instalación */
+.conexion {
+  margin-left: auto;
+  align-self: center;
+  padding-bottom: var(--espacio-2);
+  color: var(--muted);
+  font-size: var(--meta-tamano);
+}
+.actualizacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--espacio-4);
+  padding: var(--espacio-2) var(--espacio-4);
+  border-bottom: var(--grosor-regla) solid var(--rule);
+  font-size: var(--meta-tamano);
+  color: var(--muted);
+}
+.aviso {
+  padding: var(--espacio-3) 0;
+  border-top: var(--grosor-regla) solid var(--rule);
+  border-bottom: var(--grosor-regla) solid var(--rule);
+  color: var(--muted);
+}
+.aviso__acciones { display: flex; gap: var(--espacio-5); }
