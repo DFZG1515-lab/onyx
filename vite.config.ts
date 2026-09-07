@@ -37,5 +37,7 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     passWithNoTests: true,
+    // Vitest vacía los imports de CSS; tokens.css se lee como texto en su prueba de contraste.
+    css: { include: [/tokens\.css/] },
   },
 })
