@@ -44,6 +44,10 @@ Los tres colores semánticos suben de tono en oscuro para mantener contraste AA 
 
 Voz activa, verbos concretos, sin relleno. "Guardar", no "Enviar". Los errores dicen qué pasó y cómo arreglarlo. Las pantallas vacías invitan a hacer algo, no se disculpan. Nunca "exitosamente", "por favor" ni signos de admiración.
 
+## Captura
+
+Decisión del usuario (7 de septiembre de 2026): la hoja de nuevo gasto es un formulario por campos, no un campo de texto libre. Orden: cuánto (monto grande con teclado decimal), dónde o en qué, categoría en chips, método en segmentos, meses sin intereses en segmentos, fecha, chips de gastos frecuentes, y Guardar con cámara y micrófono como secundarios que por ahora solo avisan "próximamente". La app sugiere categoría y método a partir del texto de "dónde" (`src/lib/sugerencias.ts`: primero el último gasto igual, luego las claves) y muestra la razón. Si el usuario corrige la categoría, la palabra se aprende. El intérprete de texto libre (`parser.ts`) sigue en el repo con sus pruebas para el dictado y la cámara futuros.
+
 ## Datos
 
 Todo el dinero en centavos, como enteros. Formatear con `Intl.NumberFormat('es-MX')` solo al renderizar. Fechas en epoch ms, hora local. Quincena Q1 del 1 al 15, Q2 del 16 al fin de mes; id `AAAA-MM-Q1`.
