@@ -4,8 +4,10 @@ import { categoriasCercaDelTope } from '../lib/analisis'
 import { aprenderClaves } from '../lib/aprendizaje'
 import { idDeCiclo } from '../lib/ciclos'
 import { camposDesdeDictado } from '../lib/dictado'
-import { pesos, pesosACentavos } from '../lib/dinero'
+import { formatearEntradaMonto, pesos, pesosACentavos } from '../lib/dinero'
+import { diaCalendario } from '../lib/ciclos'
 import { aFechaInput, deFechaInput, etiquetaDia, mesCorto } from '../lib/fechas'
+import { IconoChevron } from './Iconos'
 import { frecuentes, type Frecuente } from '../lib/frecuentes'
 import { sugerir } from '../lib/sugerencias'
 import type { Metodo } from '../lib/tipos'
@@ -38,6 +40,8 @@ export function Captura({ alGuardar }: Props) {
   const [meses, setMeses] = useState<number | null>(null)
   const [fecha, setFecha] = useState(hoy)
   const [editandoFecha, setEditandoFecha] = useState(false)
+  const [categoriasAbiertas, setCategoriasAbiertas] = useState(false)
+  const [masOpciones, setMasOpciones] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tono: 'muted' | 'wine' | 'green' } | null>(null)
   const [foto, setFoto] = useState<File | null>(null)
@@ -132,7 +136,7 @@ export function Captura({ alGuardar }: Props) {
         <span className={`captura-monto__linea${error ? ' captura-monto__linea--error' : ''}`}>
           <span className="captura-monto__signo">$</span>
           <input
-            className="captura-monto__entrada num"
+            className="captura-monto__entrada"
             type="text"
             inputMode="decimal"
             autoComplete="off"
@@ -141,7 +145,7 @@ export function Captura({ alGuardar }: Props) {
             aria-label="Cuánto fue, en pesos"
             value={monto}
             onChange={(e) => {
-              setMonto(e.target.value)
+              setMonto(formatearEntradaMonto(e.target.value))
               setError(null)
             }}
           />
@@ -158,13 +162,30 @@ export function Captura({ alGuardar }: Props) {
         <span className="et">
           Categoría{!categoriaElegida && sugerencia.razonCategoria ? <span className="et__razon"> · {sugerencia.razonCategoria}</span> : null}
         </span>
-        <div className="chips chips--envolver" role="radiogroup" aria-label="Categoría">
-          {categorias.map((c) => (
-            <button key={c.id} type="button" role="radio" aria-checked={c.id === categoriaId} className={`chip${c.id === categoriaId ? ' chip--on' : ''}`} onClick={() => setCategoriaElegida(c.id)}>
-              {c.nombre}
-            </button>
-          ))}
-        </div>
+        {categoriasAbiertas ? (
+          <div className="chips chips--envolver" role="radiogroup" aria-label="Categoría">
+            {categorias.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={c.id === categoriaId}
+                className={`chip${c.id === categoriaId ? ' chip--on' : ''}`}
+                onClick={() => {
+                  setCategoriaElegida(c.id)
+                  setCategoriasAbiertas(false)
+                }}
+              >
+                {c.nombre}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <button type="button" className="chip chip--on chip--desplegable" aria-expanded="false" onClick={() => setCategoriasAbiertas(true)}>
+            {nombreDe(categoriaId)}
+            <IconoChevron width={14} height={14} />
+          </button>
+        )}
       </div>
 
       <div>
@@ -180,6 +201,12 @@ export function Captura({ alGuardar }: Props) {
         </div>
       </div>
 
+      {!masOpciones && meses === null && diaCalendario(fecha) === diaCalendario(hoy) ? (
+        <button type="button" className="enlace-meta captura-mas" onClick={() => setMasOpciones(true)}>
+          Más opciones · hoy, una sola vez
+        </button>
+      ) : (
+        <>
       <div>
         <span className="et">Meses sin intereses</span>
         <div className="segmentos" role="radiogroup" aria-label="Meses sin intereses">
@@ -213,6 +240,8 @@ export function Captura({ alGuardar }: Props) {
           </button>
         )}
       </div>
+        </>
+      )}
 
       {chips.length > 0 && (
         <div>
