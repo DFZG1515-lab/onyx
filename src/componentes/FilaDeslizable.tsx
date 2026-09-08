@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 
-const ANCHO_ACCIONES = 160
+const ANCHO_POR_DEFECTO = 160
 const UMBRAL = 6
 
-type Props = { children: ReactNode; acciones: ReactNode; onTocar?: () => void }
+type Props = { children: ReactNode; acciones: ReactNode; onTocar?: () => void; ancho?: number; claseAcciones?: string }
 
 /**
  * Deslizar a la izquierda descubre las acciones. Un toque sin arrastre dispara onTocar.
  * Solo eventos de puntero; sin librerías.
  */
-export function FilaDeslizable({ children, acciones, onTocar }: Props) {
+export function FilaDeslizable({ children, acciones, onTocar, ancho = ANCHO_POR_DEFECTO, claseAcciones = '' }: Props) {
+  const ANCHO_ACCIONES = ancho
   const [dx, setDx] = useState(0)
   const [arrastrando, setArrastrando] = useState(false)
   const inicio = useRef<{ x: number; y: number; dx: number } | null>(null)
@@ -67,7 +68,7 @@ export function FilaDeslizable({ children, acciones, onTocar }: Props) {
 
   return (
     <div className="deslizable" ref={contenedor}>
-      <div className="deslizable__acciones" style={{ width: ANCHO_ACCIONES }} aria-hidden={dx === 0}>
+      <div className={`deslizable__acciones ${claseAcciones}`} style={{ width: ANCHO_ACCIONES }} aria-hidden={dx === 0}>
         {acciones}
       </div>
       <div
