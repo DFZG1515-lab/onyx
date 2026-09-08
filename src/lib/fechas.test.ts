@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { cicloDesdeId } from './ciclos'
-import { aFechaInput, deFechaInput, etiquetaDia, fechaCorta, fechaLarga, rangoDeCiclo } from './fechas'
+import { aFechaInput, deFechaInput, etiquetaDia, etiquetaDiaLarga, fechaCorta, fechaLarga, mesCorto, rangoDeCiclo } from './fechas'
 
 const fecha = (a: number, m: number, d: number, h = 12) => new Date(a, m - 1, d, h).getTime()
 const hoy = fecha(2026, 9, 7)
@@ -45,5 +45,22 @@ describe('aFechaInput y deFechaInput', () => {
   test('un texto inválido devuelve null', () => {
     expect(deFechaInput('')).toBeNull()
     expect(deFechaInput('hola')).toBeNull()
+  })
+})
+
+describe('etiquetaDiaLarga', () => {
+  test('hoy y ayer llevan la fecha después de una coma', () => {
+    expect(etiquetaDiaLarga(fecha(2026, 9, 7, 8), hoy)).toBe('Hoy, 7 sep')
+    expect(etiquetaDiaLarga(fecha(2026, 9, 6, 23), hoy)).toBe('Ayer, 6 sep')
+  })
+
+  test('el resto es igual a la etiqueta corta', () => {
+    expect(etiquetaDiaLarga(fecha(2026, 9, 5), hoy)).toBe('Sáb 5 sep')
+  })
+})
+
+describe('mesLargo', () => {
+  test('"may 2027" con el mes en palabra corta', () => {
+    expect(mesCorto(fecha(2027, 5, 15))).toBe('may 2027')
   })
 })

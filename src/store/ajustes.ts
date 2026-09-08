@@ -8,9 +8,11 @@ export type AjustesSlice = {
   ajustes: Ajustes | null
   cargarAjustes: () => Promise<void>
   guardarIngresoQuincenal: (ingresoQuincenal: number) => Promise<void>
+  /** Cambia solo los campos indicados. Requiere que ya exista el ingreso. */
+  guardarAjustes: (cambios: Partial<Omit<Ajustes, 'id'>>) => Promise<void>
 }
 
-export const crearAjustesSlice: StateCreator<Tienda, [], [], AjustesSlice> = (set) => ({
+export const crearAjustesSlice: StateCreator<Tienda, [], [], AjustesSlice> = (set, get) => ({
   ajustes: null,
 
   cargarAjustes: async () => {
@@ -19,7 +21,15 @@ export const crearAjustesSlice: StateCreator<Tienda, [], [], AjustesSlice> = (se
   },
 
   guardarIngresoQuincenal: async (ingresoQuincenal) => {
-    const ajustes: Ajustes = { id: 'ajustes', ingresoQuincenal }
+    const ajustes: Ajustes = { ...(get().ajustes ?? { id: 'ajustes', ingresoQuincenal }), ingresoQuincenal }
+    await db.ajustes.put(ajustes)
+    set({ ajustes })
+  },
+
+  guardarAjustes: async (cambios) => {
+    const actuales = get().ajustes
+    if (!actuales) return
+    const ajustes: Ajustes = { ...actuales, ...cambios }
     await db.ajustes.put(ajustes)
     set({ ajustes })
   },

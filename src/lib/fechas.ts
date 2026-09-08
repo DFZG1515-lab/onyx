@@ -61,3 +61,29 @@ export function deFechaInput(texto: string): number | null {
   const ms = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12).getTime()
   return Number.isNaN(ms) ? null : ms
 }
+
+/** "Hoy, 7 sep", "Ayer, 6 sep" o "Sáb 5 sep". */
+export function etiquetaDiaLarga(fecha: number, hoy: number): string {
+  const corta = etiquetaDia(fecha, hoy)
+  if (corta !== 'Hoy' && corta !== 'Ayer') return corta
+  const d = new Date(fecha)
+  return `${corta}, ${d.getDate()} ${MESES_CORTOS[d.getMonth()] ?? ''}`
+}
+
+/** "7 sep". */
+export function diaYMes(fecha: number): string {
+  const d = new Date(fecha)
+  return `${d.getDate()} ${MESES_CORTOS[d.getMonth()] ?? ''}`
+}
+
+/** "Q2 sep" a partir de un id de ciclo. */
+export function etiquetaQuincena(cicloId: string): string {
+  const m = /^(\d{4})-(\d{2})-Q([12])$/.exec(cicloId)
+  if (!m) return cicloId
+  return `Q${m[3]} ${MESES_CORTOS[Number(m[2]) - 1] ?? ''}`
+}
+
+const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+export function nombreDiaSemana(fecha: number): string {
+  return DIAS_LARGOS[new Date(fecha).getDay()] ?? ''
+}

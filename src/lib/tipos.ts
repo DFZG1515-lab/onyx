@@ -60,8 +60,19 @@ export type Foto = {
   creadoEn: number
 }
 
+export type Tema = 'sistema' | 'claro' | 'oscuro'
+
 export type Ajustes = {
   id: 'ajustes'
   /** Ingreso por quincena que se usa al abrir cada ciclo nuevo. */
   ingresoQuincenal: number
+  /** Avisar cuando una categoría pasa del 80 por ciento de su tope. Por defecto sí. */
+  avisoTopes?: boolean
+  /** Id del último ciclo cuyo cierre ya se mostró. */
+  ultimoCierreVisto?: string
+  /** Descripciones (normalizadas) de recurrentes que el usuario pidió no volver a sugerir. */
+  recurrentesIgnorados?: string[]
+  /** true cuando terminó la lista de primer uso. */
+  primerUsoCompleto?: boolean
+  tema?: Tema
 }
