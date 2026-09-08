@@ -1,8 +1,8 @@
-import type { Ajustes, Categoria, Ciclo, CompraMSI, Gasto, GastoFijo } from './tipos'
+import type { Ajustes, Categoria, Ciclo, CompraMSI, Deuda, Gasto, GastoFijo, Ingreso } from './tipos'
 
 /** Respaldo completo en JSON. Las fotos de tickets no van: son pesadas y viven solo en el dispositivo. */
 export type Respaldo = {
-  version: 1
+  version: 2
   creadoEn: number
   datos: {
     gastos: Gasto[]
@@ -10,12 +10,14 @@ export type Respaldo = {
     ciclos: Ciclo[]
     gastosFijos: GastoFijo[]
     comprasMSI: CompraMSI[]
+    ingresos: Ingreso[]
+    deudas: Deuda[]
     ajustes: Ajustes | null
   }
 }
 
 export function crearRespaldo(datos: Respaldo['datos'], creadoEn = Date.now()): string {
-  const respaldo: Respaldo = { version: 1, creadoEn, datos }
+  const respaldo: Respaldo = { version: 2, creadoEn, datos }
   return JSON.stringify(respaldo, null, 2)
 }
 
@@ -39,11 +41,17 @@ function esFijo(x: unknown): x is GastoFijo {
 function esMSI(x: unknown): x is CompraMSI {
   return esObjeto(x) && esTexto(x.id) && esTexto(x.descripcion) && esEntero(x.montoTotal) && esEntero(x.meses) && esNumero(x.fechaCompra)
 }
+function esIngreso(x: unknown): x is Ingreso {
+  return esObjeto(x) && esTexto(x.id) && esTexto(x.descripcion) && esEntero(x.monto) && esNumero(x.fecha) && esTexto(x.cicloId)
+}
+function esDeuda(x: unknown): x is Deuda {
+  return esObjeto(x) && esTexto(x.id) && esTexto(x.descripcion) && esEntero(x.monto) && esNumero(x.fecha) && esTexto(x.gastoId) && typeof x.cobrada === 'boolean'
+}
 function esAjustes(x: unknown): x is Ajustes {
   return esObjeto(x) && x.id === 'ajustes' && esEntero(x.ingresoQuincenal)
 }
 
-/** Devuelve el respaldo si el texto es válido; null si no lo es. */
+/** Devuelve el respaldo si el texto es válido; null si no lo es. Acepta las versiones 1 y 2. */
 export function leerRespaldo(texto: string): Respaldo | null {
   let crudo: unknown
   try {
@@ -51,18 +59,21 @@ export function leerRespaldo(texto: string): Respaldo | null {
   } catch {
     return null
   }
-  if (!esObjeto(crudo) || crudo.version !== 1 || !esNumero(crudo.creadoEn) || !esObjeto(crudo.datos)) return null
-  const d = crudo.datos
+  if (!esObjeto(crudo) || (crudo.version !== 1 && crudo.version !== 2) || !esNumero(crudo.creadoEn) || !esObjeto(crudo.datos)) return null
+  // Un respaldo de la versión 1 no traía ingresos ni deudas.
+  const d: Record<string, unknown> = { ingresos: [], deudas: [], ...crudo.datos }
   const listas = [
     [d.gastos, esGasto],
     [d.categorias, esCategoria],
     [d.ciclos, esCiclo],
     [d.gastosFijos, esFijo],
     [d.comprasMSI, esMSI],
+    [d.ingresos, esIngreso],
+    [d.deudas, esDeuda],
   ] as const
   for (const [lista, valida] of listas) {
     if (!Array.isArray(lista) || !lista.every((x) => valida(x))) return null
   }
   if (d.ajustes !== null && !esAjustes(d.ajustes)) return null
-  return crudo as Respaldo
+  return { version: 2, creadoEn: crudo.creadoEn, datos: d as Respaldo['datos'] }
 }

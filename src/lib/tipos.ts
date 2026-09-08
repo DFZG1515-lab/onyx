@@ -50,7 +50,27 @@ export type CompraMSI = {
   montoTotal: number
   meses: number
   fechaCompra: number
-  pagosHechos: number
+  /** Quincena del primer cargo, si el corte de la tarjeta no coincide con la quincena siguiente a la compra. */
+  primerPagoCicloId?: string
+}
+
+/** Dinero que entra además del ingreso esperado: bono, aguinaldo, un préstamo que te devuelven. */
+export type Ingreso = {
+  id: string
+  descripcion: string
+  monto: number
+  fecha: number
+  cicloId: string
+}
+
+/** Lo que te deben de un gasto compartido. */
+export type Deuda = {
+  id: string
+  descripcion: string
+  monto: number
+  fecha: number
+  gastoId: string
+  cobrada: boolean
 }
 
 export type Foto = {

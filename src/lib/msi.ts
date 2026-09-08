@@ -1,21 +1,22 @@
-import { cicloDesdeId, idDeCiclo, idsSiguientes } from './ciclos'
+import { cicloDesdeId, idDeCiclo, idSiguiente, idsSiguientes } from './ciclos'
 import type { CompraMSI } from './tipos'
 
 /**
  * Meses sin intereses. Una compra a n meses se reparte en 2n quincenas,
- * empezando en la quincena siguiente a la compra. Todo en centavos enteros.
+ * empezando en la quincena siguiente a la compra, o en la que el usuario indique como primer cargo. Todo en centavos enteros.
  */
 
 export type PagoMSI = { cicloId: string; monto: number }
 
-type Compra = Pick<CompraMSI, 'montoTotal' | 'meses' | 'fechaCompra'>
+type Compra = Pick<CompraMSI, 'montoTotal' | 'meses' | 'fechaCompra' | 'primerPagoCicloId'>
 
 export function calendarioDePagos(compra: Compra): PagoMSI[] {
   const total = compra.meses * 2
   if (total <= 0) return []
   const cuota = Math.floor(compra.montoTotal / total)
   const residuo = compra.montoTotal - cuota * total
-  return idsSiguientes(idDeCiclo(compra.fechaCompra), total).map((cicloId, i) => ({
+  const primero = compra.primerPagoCicloId ?? idSiguiente(idDeCiclo(compra.fechaCompra))
+  return [primero, ...idsSiguientes(primero, total - 1)].map((cicloId, i) => ({
     cicloId,
     monto: i === total - 1 ? cuota + residuo : cuota,
   }))

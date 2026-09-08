@@ -41,7 +41,7 @@ describe('gastoPorDia y diaMasCaro', () => {
 })
 
 describe('proyeccionMSI', () => {
-  const tele: CompraMSI = { id: 't', descripcion: 'Tele', montoTotal: 1_200_000, meses: 3, fechaCompra: fecha(2026, 9, 7), pagosHechos: 0 }
+  const tele: CompraMSI = { id: 't', descripcion: 'Tele', montoTotal: 1_200_000, meses: 3, fechaCompra: fecha(2026, 9, 7) }
 
   test('da las próximas n quincenas desde la actual con lo que sale en cada una', () => {
     const p = proyeccionMSI([tele], '2026-09-Q1', 7)
@@ -152,5 +152,13 @@ describe('resumenDeCiclo e historialDeCiclos', () => {
   test('un ciclo cerrado sin gastos ni ingreso no infla el guardado', () => {
     const vacio = cicloDesdeId('2026-07-Q2', 0)
     expect(historialDeCiclos([vacio], [], [], fecha(2026, 9, 7)).guardadoAcumulado).toBe(0)
+  })
+})
+
+describe('ingresos extra en el cierre', () => {
+  test('un bono en el ciclo sube el sobrante', () => {
+    const r = resumenDeCiclo(q1, [], [], undefined, [{ id: 'b', descripcion: 'Bono', monto: 300_000, fecha: fecha(2026, 9, 5), cicloId: q1.id }])
+    expect(r.ingreso).toBe(1_500_000)
+    expect(r.sobrante).toBe(1_500_000)
   })
 })

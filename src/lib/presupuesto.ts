@@ -1,12 +1,13 @@
 import { diaCalendario, diasRestantes } from './ciclos'
 import { totalMSIEnCiclo } from './msi'
-import type { Ciclo, CompraMSI, Gasto, GastoFijo } from './tipos'
+import type { Ciclo, CompraMSI, Gasto, GastoFijo, Ingreso } from './tipos'
 
 /**
  * El cálculo central: "¿me alcanza?".
  *
  *   comprometido = MSI de esta quincena + fijos cuyo día de cobro aún no pasa
- *   disponible   = ingresoEsperado - gastado - comprometido
+ *   ingreso      = ingresoEsperado + ingresos extra de la quincena
+ *   disponible   = ingreso - gastado - comprometido
  *   porDia       = disponible / díasRestantes
  *
  * Funciones puras. Reciben `hoy` por parámetro para poder probarse.
@@ -18,10 +19,14 @@ export type EntradaPresupuesto = {
   gastos: Gasto[]
   comprasMSI: CompraMSI[]
   gastosFijos: GastoFijo[]
+  ingresos?: Ingreso[]
 }
 
 export type Presupuesto = {
+  /** Esperado más extras. */
   ingreso: number
+  ingresoEsperado: number
+  extras: number
   gastado: number
   msi: number
   fijosPendientes: number
@@ -50,15 +55,19 @@ export function fijosPendientes(fijos: GastoFijo[], ciclo: Ciclo, hoy: number): 
     .reduce((suma, f) => suma + f.monto, 0)
 }
 
-export function calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos }: EntradaPresupuesto): Presupuesto {
+export function calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos, ingresos = [] }: EntradaPresupuesto): Presupuesto {
+  const extras = ingresos.filter((i) => i.cicloId === ciclo.id).reduce((suma, i) => suma + i.monto, 0)
+  const ingreso = ciclo.ingresoEsperado + extras
   const gastado = gastos.filter((g) => g.cicloId === ciclo.id).reduce((suma, g) => suma + g.monto, 0)
   const msi = totalMSIEnCiclo(comprasMSI, ciclo.id)
   const fijos = fijosPendientes(gastosFijos, ciclo, hoy)
   const comprometido = msi + fijos
-  const disponible = ciclo.ingresoEsperado - gastado - comprometido
+  const disponible = ingreso - gastado - comprometido
   const dias = diasRestantes(ciclo, hoy)
   return {
-    ingreso: ciclo.ingresoEsperado,
+    ingreso,
+    ingresoEsperado: ciclo.ingresoEsperado,
+    extras,
     gastado,
     msi,
     fijosPendientes: fijos,
@@ -101,4 +110,11 @@ export function calcularRitmo({ ingreso, gastado, diasTranscurridos, diasTotales
   const diferencia = esperadoHastaHoy - gastado
   const estado: EstadoRitmo = diferencia >= 0 ? 'bien' : diferencia >= -ingreso * 0.1 ? 'justo' : 'excedido'
   return { esperadoHastaHoy, diferencia, estado }
+}
+
+/** Un gasto compartido entre n: tu parte redondeada hacia arriba y lo que te deben, que suma exacto. */
+export function repartir(monto: number, entre: number): { miParte: number; meDeben: number } {
+  const n = Math.max(1, Math.floor(entre))
+  const miParte = Math.ceil(monto / n)
+  return { miParte, meDeben: monto - miParte }
 }

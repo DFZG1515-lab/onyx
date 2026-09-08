@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { cicloDesdeId } from './ciclos'
-import { calcularPresupuesto, calcularRitmo, fijosPendientes, gastoPorCategoria } from './presupuesto'
+import { calcularPresupuesto, calcularRitmo, fijosPendientes, gastoPorCategoria, repartir } from './presupuesto'
 import type { CompraMSI, Gasto, GastoFijo } from './tipos'
 
 const fecha = (a: number, m: number, d: number, h = 12) => new Date(a, m - 1, d, h).getTime()
@@ -22,7 +22,7 @@ function gasto(monto: number, extra: Partial<Gasto> = {}): Gasto {
   }
 }
 
-const tele: CompraMSI = { id: 't', descripcion: 'Tele', montoTotal: 1_200_000, meses: 12, fechaCompra: fecha(2026, 8, 20), pagosHechos: 0 }
+const tele: CompraMSI = { id: 't', descripcion: 'Tele', montoTotal: 1_200_000, meses: 12, fechaCompra: fecha(2026, 8, 20) }
 
 const renta: GastoFijo = { id: 'r', descripcion: 'Renta', monto: 800_000, diaDelMes: 10, activo: true }
 const internet: GastoFijo = { id: 'i', descripcion: 'Internet', monto: 50_000, diaDelMes: 20, activo: true }
@@ -59,6 +59,8 @@ describe('calcularPresupuesto', () => {
     const p = calcularPresupuesto({ ciclo: q1, hoy: fecha(2026, 9, 1), gastos: [], comprasMSI: [], gastosFijos: [] })
     expect(p).toEqual({
       ingreso: 1_500_000,
+      ingresoEsperado: 1_500_000,
+      extras: 0,
       gastado: 0,
       msi: 0,
       fijosPendientes: 0,
@@ -199,5 +201,41 @@ describe('calcularRitmo', () => {
 
   test('el esperado es un entero en centavos', () => {
     expect(Number.isInteger(calcularRitmo({ ingreso: 1_000_001, gastado: 0, diasTranscurridos: 7, diasTotales: 15 }).esperadoHastaHoy)).toBe(true)
+  })
+})
+
+describe('ingresos extra', () => {
+  test('un bono suma al disponible pero se reporta aparte del ingreso esperado', () => {
+    const p = calcularPresupuesto({
+      ciclo: q1,
+      hoy: fecha(2026, 9, 7),
+      gastos: [],
+      comprasMSI: [],
+      gastosFijos: [],
+      ingresos: [{ id: 'b', descripcion: 'Bono', monto: 300_000, fecha: fecha(2026, 9, 5), cicloId: q1.id }],
+    })
+    expect(p.extras).toBe(300_000)
+    expect(p.ingresoEsperado).toBe(1_500_000)
+    expect(p.ingreso).toBe(1_800_000)
+    expect(p.disponible).toBe(1_800_000)
+  })
+
+  test('los ingresos de otros ciclos no cuentan', () => {
+    const p = calcularPresupuesto({ ciclo: q1, hoy: fecha(2026, 9, 7), gastos: [], comprasMSI: [], gastosFijos: [], ingresos: [{ id: 'b', descripcion: 'Bono', monto: 300_000, fecha: fecha(2026, 8, 20), cicloId: '2026-08-Q2' }] })
+    expect(p.extras).toBe(0)
+  })
+})
+
+describe('repartir', () => {
+  test('divide un gasto entre n y dice cuánto te deben', () => {
+    expect(repartir(60_000, 3)).toEqual({ miParte: 20_000, meDeben: 40_000 })
+  })
+
+  test('si no divide exacto, tu parte se redondea hacia arriba y la suma cuadra', () => {
+    expect(repartir(10_000, 3)).toEqual({ miParte: 3_334, meDeben: 6_666 })
+  })
+
+  test('entre uno no hay deuda', () => {
+    expect(repartir(8_500, 1)).toEqual({ miParte: 8_500, meDeben: 0 })
   })
 })

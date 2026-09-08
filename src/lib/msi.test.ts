@@ -11,7 +11,6 @@ const tele: CompraMSI = {
   montoTotal: 1_200_000,
   meses: 12,
   fechaCompra: fecha(2026, 9, 7),
-  pagosHechos: 0,
 }
 
 const celular: CompraMSI = {
@@ -20,7 +19,6 @@ const celular: CompraMSI = {
   montoTotal: 10_000,
   meses: 3,
   fechaCompra: fecha(2026, 9, 20),
-  pagosHechos: 0,
 }
 
 describe('calendarioDePagos', () => {
@@ -94,5 +92,19 @@ describe('totalPendiente y fechaLiberacion', () => {
 
   test('sin compras no hay fecha de liberación', () => {
     expect(fechaLiberacion([])).toBeNull()
+  })
+})
+
+describe('primer pago ajustable', () => {
+  test('si la compra dice en qué quincena empieza a cobrarse, el calendario arranca ahí', () => {
+    const conCorte: CompraMSI = { ...tele, primerPagoCicloId: '2026-10-Q1' }
+    const pagos = calendarioDePagos(conCorte)
+    expect(pagos[0]?.cicloId).toBe('2026-10-Q1')
+    expect(pagos).toHaveLength(24)
+    expect(pagos.at(-1)?.cicloId).toBe('2027-09-Q2')
+  })
+
+  test('sin ese dato, sigue empezando en la quincena siguiente a la compra', () => {
+    expect(calendarioDePagos(tele)[0]?.cicloId).toBe('2026-09-Q2')
   })
 })

@@ -1,7 +1,7 @@
 import { diaCalendario, diasDelCiclo, idAnterior, idsSiguientes } from './ciclos'
 import { calendarioDePagos, totalMSIEnCiclo } from './msi'
 import { normalizar } from './parser'
-import type { Categoria, Ciclo, CompraMSI, Gasto } from './tipos'
+import type { Categoria, Ciclo, CompraMSI, Gasto, Ingreso } from './tipos'
 
 /** Análisis derivado de los datos: gráfica diaria, proyección, recurrentes, topes, cierre e historial. */
 
@@ -111,7 +111,9 @@ function totalesPorCategoria(gastos: Gasto[], cicloId: string): Map<string, numb
   return m
 }
 
-export function resumenDeCiclo(ciclo: Ciclo, gastos: Gasto[], compras: CompraMSI[], anterior?: Ciclo): ResumenCiclo {
+export function resumenDeCiclo(ciclo: Ciclo, gastos: Gasto[], compras: CompraMSI[], anterior?: Ciclo, ingresos: Ingreso[] = []): ResumenCiclo {
+  const extras = ingresos.filter((i) => i.cicloId === ciclo.id).reduce((s, i) => s + i.monto, 0)
+  const ingreso = ciclo.ingresoEsperado + extras
   const gastado = gastos.filter((g) => g.cicloId === ciclo.id).reduce((s, g) => s + g.monto, 0)
   const msi = totalMSIEnCiclo(compras, ciclo.id)
   let categoriaQueMasCrecio: ResumenCiclo['categoriaQueMasCrecio'] = null
@@ -123,18 +125,18 @@ export function resumenDeCiclo(ciclo: Ciclo, gastos: Gasto[], compras: CompraMSI
       if (diferencia > 0 && (!categoriaQueMasCrecio || diferencia > categoriaQueMasCrecio.diferencia)) categoriaQueMasCrecio = { categoriaId, diferencia }
     }
   }
-  return { cicloId: ciclo.id, inicio: ciclo.inicio, fin: ciclo.fin, ingreso: ciclo.ingresoEsperado, gastado, msi, sobrante: ciclo.ingresoEsperado - gastado - msi, categoriaQueMasCrecio }
+  return { cicloId: ciclo.id, inicio: ciclo.inicio, fin: ciclo.fin, ingreso, gastado, msi, sobrante: ingreso - gastado - msi, categoriaQueMasCrecio }
 }
 
 export type Historial = { ciclos: (ResumenCiclo & { diferenciaConAnterior: number | null })[]; guardadoAcumulado: number }
 
 /** Ciclos ya cerrados, del más reciente al más viejo, y cuánto sobró en total. */
-export function historialDeCiclos(ciclos: Ciclo[], gastos: Gasto[], compras: CompraMSI[], hoy: number): Historial {
+export function historialDeCiclos(ciclos: Ciclo[], gastos: Gasto[], compras: CompraMSI[], hoy: number, ingresos: Ingreso[] = []): Historial {
   const cerrados = ciclos.filter((c) => c.fin < hoy).sort((a, b) => b.inicio - a.inicio)
   const resumenes = cerrados.map((c, i) => {
     const anterior = cerrados[i + 1]
-    const r = resumenDeCiclo(c, gastos, compras, anterior)
-    const ra = anterior ? resumenDeCiclo(anterior, gastos, compras) : null
+    const r = resumenDeCiclo(c, gastos, compras, anterior, ingresos)
+    const ra = anterior ? resumenDeCiclo(anterior, gastos, compras, undefined, ingresos) : null
     return { ...r, diferenciaConAnterior: ra ? r.sobrante - ra.sobrante : null }
   })
   return { ciclos: resumenes, guardadoAcumulado: resumenes.reduce((s, r) => s + Math.max(0, r.sobrante), 0) }
