@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Ajustes, Categoria, Ciclo, CompraMSI, Foto, Gasto, GastoFijo } from '../lib/tipos'
+import type { Ajustes, Categoria, Ciclo, CompraMSI, Deuda, Foto, Gasto, GastoFijo, Ingreso } from '../lib/tipos'
 import { CATEGORIAS_INICIALES } from './semilla'
 
 /**
@@ -14,6 +14,8 @@ export class BaseDeDatos extends Dexie {
   declare comprasMSI: EntityTable<CompraMSI, 'id'>
   declare ajustes: EntityTable<Ajustes, 'id'>
   declare fotos: EntityTable<Foto, 'id'>
+  declare ingresos: EntityTable<Ingreso, 'id'>
+  declare deudas: EntityTable<Deuda, 'id'>
 
   constructor() {
     super('onyx')
@@ -27,6 +29,8 @@ export class BaseDeDatos extends Dexie {
     })
     // v2: fotos de tickets adjuntas a un gasto.
     this.version(2).stores({ fotos: 'id, gastoId' })
+    // v3: ingresos extra por quincena y deudas de gastos compartidos.
+    this.version(3).stores({ ingresos: 'id, cicloId', deudas: 'id, gastoId' })
     this.on('populate', () => {
       void this.categorias.bulkAdd(CATEGORIAS_INICIALES)
     })

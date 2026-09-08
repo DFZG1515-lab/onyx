@@ -18,6 +18,9 @@ type EstadoUI = {
   /** Día (epoch ms) al que se filtra Movimientos desde la gráfica; null sin filtro. */
   filtroDia: number | null
   setFiltroDia: (dia: number | null) => void
+  /** Quincena (id) a la que se filtra Movimientos desde el historial; null sin filtro. */
+  filtroCiclo: string | null
+  setFiltroCiclo: (cicloId: string | null) => void
   /** Último valor del monto grande, para que el héroe viaje entre pantallas. */
   heroeAnterior: number | null
   setHeroeAnterior: (valor: number) => void
@@ -34,6 +37,8 @@ export const useUI = create<EstadoUI>()((set) => ({
   marcarEntrada: () => set({ entradaHecha: true }),
   filtroDia: null,
   setFiltroDia: (filtroDia) => set({ filtroDia }),
+  filtroCiclo: null,
+  setFiltroCiclo: (filtroCiclo) => set({ filtroCiclo }),
   heroeAnterior: null,
   setHeroeAnterior: (heroeAnterior) => set({ heroeAnterior }),
 }))

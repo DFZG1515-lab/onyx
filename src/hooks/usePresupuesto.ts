@@ -27,12 +27,14 @@ export function usePresupuesto(): DatosResumen | null {
   const gastos = useTienda((s) => s.gastos)
   const comprasMSI = useTienda((s) => s.comprasMSI)
   const gastosFijos = useTienda((s) => s.gastosFijos)
+  const ingresos = useTienda((s) => s.ingresos)
   if (!ciclo) return null
-  const presupuesto = calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos })
+  const presupuesto = calcularPresupuesto({ ciclo, hoy, gastos, comprasMSI, gastosFijos, ingresos })
   const diasTotales = diasDelCiclo(ciclo)
   // El ritmo compara solo gastos reales: lo comprometido ya está descontado del disponible.
   const ritmo = calcularRitmo({
-    ingreso: presupuesto.ingreso,
+    // Los ingresos extra no cambian el ritmo esperado: un bono no debe animar a gastar más rápido.
+    ingreso: presupuesto.ingresoEsperado,
     gastado: presupuesto.gastado,
     diasTranscurridos: diasTotales - presupuesto.diasRestantes + 1,
     diasTotales,
