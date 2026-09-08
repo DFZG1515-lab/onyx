@@ -4,9 +4,9 @@ import { IconoBote } from '../componentes/Iconos'
 import { Monto } from '../componentes/Monto'
 import { Vacio } from '../componentes/Vacio'
 import { useAhora } from '../hooks/useAhora'
-import { diaCalendario } from '../lib/ciclos'
+import { cicloDesdeId, diaCalendario } from '../lib/ciclos'
 import { pesos } from '../lib/dinero'
-import { diaYMes, etiquetaDia, fechaCorta } from '../lib/fechas'
+import { diaYMes, etiquetaDia, fechaCorta, rangoDeCiclo } from '../lib/fechas'
 import { normalizar } from '../lib/parser'
 import type { Gasto, Metodo } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
@@ -30,6 +30,8 @@ export function Movimientos() {
   const mostrarAviso = useUI((s) => s.mostrarAviso)
   const filtroDia = useUI((s) => s.filtroDia)
   const setFiltroDia = useUI((s) => s.setFiltroDia)
+  const filtroCiclo = useUI((s) => s.filtroCiclo)
+  const setFiltroCiclo = useUI((s) => s.setFiltroCiclo)
 
   const [busqueda, setBusqueda] = useState('')
   const [busquedaLista, setBusquedaLista] = useState('')
@@ -63,6 +65,7 @@ export function Movimientos() {
     .filter((g) => !ocultos.has(g.id))
     .filter((g) => metodo === 'todo' || g.metodo === metodo)
     .filter((g) => filtroDia === null || diaCalendario(g.fecha) === diaCalendario(filtroDia))
+    .filter((g) => filtroCiclo === null || g.cicloId === filtroCiclo)
     .filter((g) => !texto || normalizar(g.descripcion).includes(texto) || normalizar(nombreDe(g.categoriaId)).includes(texto))
     .sort((a, b) => b.fecha - a.fecha)
 
@@ -89,7 +92,7 @@ export function Movimientos() {
     })
   }
 
-  const hayFiltros = texto || metodo !== 'todo' || filtroDia !== null
+  const hayFiltros = texto || metodo !== 'todo' || filtroDia !== null || filtroCiclo !== null
   const vacio = gastos.length === 0
     ? 'Toca el botón de abajo y registra tu primer gasto. Empieza por cuánto fue y dónde.'
     : texto
@@ -109,6 +112,14 @@ export function Movimientos() {
           </button>
         ))}
       </div>
+      {filtroCiclo !== null && (
+        <div className="filtro-dia">
+          <span>Quincena del {rangoDeCiclo(cicloDesdeId(filtroCiclo, 0))}</span>
+          <button type="button" className="enlace-meta" onClick={() => setFiltroCiclo(null)}>
+            Quitar filtro
+          </button>
+        </div>
+      )}
       {filtroDia !== null && (
         <div className="filtro-dia">
           <span>Solo el {fechaCorta(filtroDia)}</span>

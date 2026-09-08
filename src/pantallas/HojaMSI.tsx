@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Campo } from '../componentes/Campo'
 import { Hoja } from '../componentes/Hoja'
 import { pesosACentavos } from '../lib/dinero'
-import { aFechaInput, deFechaInput } from '../lib/fechas'
+import { idDeCiclo, idSiguiente } from '../lib/ciclos'
+import { aFechaInput, deFechaInput, etiquetaQuincena } from '../lib/fechas'
 import type { CompraMSI } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
 
@@ -25,6 +26,8 @@ function Formulario({ compra, onCerrar }: { compra: CompraMSI | null; onCerrar: 
   const [monto, setMonto] = useState(compra ? String(compra.montoTotal / 100) : '')
   const [meses, setMeses] = useState(compra ? String(compra.meses) : '12')
   const [fecha, setFecha] = useState(aFechaInput(compra?.fechaCompra ?? Date.now()))
+  const [primerCargo, setPrimerCargo] = useState<'siguiente' | 'misma' | 'otra'>(compra?.primerPagoCicloId ? (compra.primerPagoCicloId === idDeCiclo(compra.fechaCompra) ? 'misma' : 'otra') : 'siguiente')
+  const [fechaCargo, setFechaCargo] = useState(aFechaInput(compra?.fechaCompra ?? Date.now()))
   const [error, setError] = useState<string | null>(null)
   const [confirmarBorrado, setConfirmarBorrado] = useState(false)
 
@@ -38,8 +41,11 @@ function Formulario({ compra, onCerrar }: { compra: CompraMSI | null; onCerrar: 
     if (!Number.isInteger(numeroMeses) || numeroMeses < 1 || numeroMeses > 48) return setError('Los meses van de 1 a 48')
     if (!fechaMs) return setError('Elige la fecha de compra')
 
-    const datos = { descripcion: descripcion.trim(), montoTotal: centavos, meses: numeroMeses, fechaCompra: fechaMs, pagosHechos: 0 }
-    if (compra) await actualizarMSI(compra.id, datos)
+    const fechaCargoMs = deFechaInput(fechaCargo)
+    if (primerCargo === 'otra' && !fechaCargoMs) return setError('Elige la fecha del primer cargo')
+    const base = { descripcion: descripcion.trim(), montoTotal: centavos, meses: numeroMeses, fechaCompra: fechaMs }
+    const datos = primerCargo === 'siguiente' ? base : { ...base, primerPagoCicloId: primerCargo === 'misma' ? idDeCiclo(fechaMs) : idDeCiclo(fechaCargoMs ?? fechaMs) }
+    if (compra) await actualizarMSI(compra.id, primerCargo === 'siguiente' ? { ...datos, primerPagoCicloId: undefined as unknown as string } : datos)
     else await agregarMSI(datos)
     onCerrar()
   }
@@ -62,9 +68,23 @@ function Formulario({ compra, onCerrar }: { compra: CompraMSI | null; onCerrar: 
       <Campo etiqueta="Meses">
         <input className="entrada" type="number" inputMode="numeric" min={1} max={48} value={meses} onChange={(e) => setMeses(e.target.value)} />
       </Campo>
-      <Campo etiqueta="Fecha de compra" error={error} ayuda="El primer pago cae en la quincena siguiente a la compra.">
+      <Campo etiqueta="Fecha de compra" error={error}>
         <input className="entrada" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
       </Campo>
+      <div>
+        <span className="et">Primer cargo en la tarjeta</span>
+        <div className="segmentos" role="radiogroup" aria-label="Primer cargo">
+          {([['siguiente', `Quincena siguiente${deFechaInput(fecha) ? ` · ${etiquetaQuincena(idSiguiente(idDeCiclo(deFechaInput(fecha) ?? Date.now())))}` : ''}`], ['misma', 'Esta misma'], ['otra', 'Otra fecha']] as const).map(([valor, texto]) => (
+            <button key={valor} type="button" role="radio" aria-checked={primerCargo === valor} className={`segmento${primerCargo === valor ? ' segmento--on' : ''}`} onClick={() => setPrimerCargo(valor)}>
+              {texto}
+            </button>
+          ))}
+        </div>
+        {primerCargo === 'otra' && (
+          <input className="entrada" type="date" style={{ marginTop: 8 }} aria-label="Fecha del primer cargo" value={fechaCargo} onChange={(e) => setFechaCargo(e.target.value)} />
+        )}
+        <span className="et" style={{ marginTop: 6 }}>Si tu tarjeta corta después de la compra, el primer pago puede caer una quincena más tarde.</span>
+      </div>
       <div className="formulario__acciones">
         <button type="submit" className="primario">
           Guardar

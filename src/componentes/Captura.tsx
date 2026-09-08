@@ -9,6 +9,7 @@ import { diaCalendario } from '../lib/ciclos'
 import { aFechaInput, deFechaInput, etiquetaDia, mesCorto } from '../lib/fechas'
 import { IconoChevron } from './Iconos'
 import { frecuentes, type Frecuente } from '../lib/frecuentes'
+import { repartir } from '../lib/presupuesto'
 import { sugerir } from '../lib/sugerencias'
 import type { Metodo } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
@@ -31,6 +32,7 @@ export function Captura({ alGuardar }: Props) {
   const agregarMSI = useTienda((s) => s.agregarMSI)
   const guardarCategoria = useTienda((s) => s.guardarCategoria)
   const asegurarCiclo = useTienda((s) => s.asegurarCiclo)
+  const agregarDeuda = useTienda((s) => s.agregarDeuda)
   const avisoTopes = useTienda((s) => s.ajustes?.avisoTopes !== false)
 
   const [monto, setMonto] = useState('')
@@ -42,6 +44,7 @@ export function Captura({ alGuardar }: Props) {
   const [editandoFecha, setEditandoFecha] = useState(false)
   const [categoriasAbiertas, setCategoriasAbiertas] = useState(false)
   const [masOpciones, setMasOpciones] = useState(false)
+  const [entre, setEntre] = useState(1)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tono: 'muted' | 'wine' | 'green' } | null>(null)
   const [foto, setFoto] = useState<File | null>(null)
@@ -71,7 +74,11 @@ export function Captura({ alGuardar }: Props) {
     const descripcion = donde.trim() || nombreDe(categoriaId)
     await asegurarCiclo(idDeCiclo(fecha))
     if (meses) {
-      await agregarMSI({ descripcion, montoTotal: centavos, meses, fechaCompra: fecha, pagosHechos: 0 })
+      await agregarMSI({ descripcion, montoTotal: centavos, meses, fechaCompra: fecha })
+    } else if (entre > 1) {
+      const { miParte, meDeben } = repartir(centavos, entre)
+      const gasto = await agregarGasto({ descripcion: `${descripcion} (mi parte de ${entre})`, monto: miParte, categoriaId, metodo, fecha, cicloId: idDeCiclo(fecha) }, foto ?? undefined)
+      await agregarDeuda({ descripcion, monto: meDeben, fecha, gastoId: gasto.id, cobrada: false })
     } else {
       await agregarGasto({ descripcion, monto: centavos, categoriaId, metodo, fecha, cicloId: idDeCiclo(fecha) }, foto ?? undefined)
     }
@@ -80,7 +87,11 @@ export function Captura({ alGuardar }: Props) {
     if (categoriaElegida && categoriaElegida !== porClaves && donde.trim()) {
       for (const c of aprenderClaves(categorias, donde, categoriaElegida)) await guardarCategoria(c)
     }
-    let mensaje = meses ? `Guardado: ${descripcion} a ${meses} meses` : `Guardado: ${descripcion} ${pesos(centavos)}${foto ? ' con ticket' : ''}`
+    let mensaje = meses
+      ? `Guardado: ${descripcion} a ${meses} meses`
+      : entre > 1
+        ? `Guardado: tu parte de ${descripcion}, ${pesos(repartir(centavos, entre).miParte)}. Te deben ${pesos(repartir(centavos, entre).meDeben)}`
+        : `Guardado: ${descripcion} ${pesos(centavos)}${foto ? ' con ticket' : ''}`
     if (!meses && avisoTopes) {
       const delCiclo = useTienda.getState().gastos.filter((g) => g.cicloId === idDeCiclo(fecha))
       const cerca = categoriasCercaDelTope(delCiclo, categorias).find((c) => c.categoriaId === categoriaId)
@@ -201,7 +212,7 @@ export function Captura({ alGuardar }: Props) {
         </div>
       </div>
 
-      {!masOpciones && meses === null && diaCalendario(fecha) === diaCalendario(hoy) ? (
+      {!masOpciones && meses === null && entre === 1 && diaCalendario(fecha) === diaCalendario(hoy) ? (
         <button type="button" className="enlace-meta captura-mas" onClick={() => setMasOpciones(true)}>
           Más opciones · hoy, una sola vez
         </button>
@@ -217,6 +228,24 @@ export function Captura({ alGuardar }: Props) {
           ))}
         </div>
       </div>
+
+      {meses === null && (
+        <div>
+          <span className="et">Dividir entre</span>
+          <div className="segmentos" role="radiogroup" aria-label="Entre cuántas personas se divide">
+            {[1, 2, 3, 4].map((n) => (
+              <button key={n} type="button" role="radio" aria-checked={n === entre} className={`segmento${n === entre ? ' segmento--on' : ''}`} onClick={() => setEntre(n)}>
+                {n === 1 ? 'Solo yo' : n}
+              </button>
+            ))}
+          </div>
+          {entre > 1 && centavos && (
+            <span className="et" style={{ marginTop: 6 }}>
+              Se guarda tu parte, {pesos(repartir(centavos, entre).miParte)}. Lo demás queda como deuda a tu favor.
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="captura-fecha">
         <span className="meta">Fecha</span>
