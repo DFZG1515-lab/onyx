@@ -1,14 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAhora } from '../hooks/useAhora'
 import { aprenderClaves } from '../lib/aprendizaje'
 import { idDeCiclo } from '../lib/ciclos'
+import { camposDesdeDictado } from '../lib/dictado'
 import { pesos, pesosACentavos } from '../lib/dinero'
 import { aFechaInput, deFechaInput, etiquetaDia, mesCorto } from '../lib/fechas'
 import { frecuentes, type Frecuente } from '../lib/frecuentes'
 import { sugerir } from '../lib/sugerencias'
 import type { Metodo } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
-import { useUI } from '../store/ui'
 
 const METODOS: { valor: Metodo; texto: string }[] = [
   { valor: 'efectivo', texto: 'Efectivo' },
@@ -27,7 +27,6 @@ export function Captura({ alGuardar }: Props) {
   const agregarGasto = useTienda((s) => s.agregarGasto)
   const agregarMSI = useTienda((s) => s.agregarMSI)
   const guardarCategoria = useTienda((s) => s.guardarCategoria)
-  const mostrarAviso = useUI((s) => s.mostrarAviso)
 
   const [monto, setMonto] = useState('')
   const [donde, setDonde] = useState('')
@@ -37,6 +36,14 @@ export function Captura({ alGuardar }: Props) {
   const [fecha, setFecha] = useState(hoy)
   const [editandoFecha, setEditandoFecha] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tono: 'muted' | 'wine' | 'green' } | null>(null)
+  const [foto, setFoto] = useState<File | null>(null)
+  const [escuchando, setEscuchando] = useState(false)
+  const reconocimiento = useRef<ReconocimientoVoz | null>(null)
+  const entradaFoto = useRef<HTMLInputElement>(null)
+  const Reconocimiento = typeof window !== 'undefined' ? (window.SpeechRecognition ?? window.webkitSpeechRecognition) : undefined
+
+  useEffect(() => () => reconocimiento.current?.abort(), [])
 
   const sugerencia = sugerir(donde, categorias, gastos)
   const categoriaId = categoriaElegida ?? sugerencia.categoriaId
@@ -58,14 +65,49 @@ export function Captura({ alGuardar }: Props) {
     if (meses) {
       await agregarMSI({ descripcion, montoTotal: centavos, meses, fechaCompra: fecha, pagosHechos: 0 })
     } else {
-      await agregarGasto({ descripcion, monto: centavos, categoriaId, metodo, fecha, cicloId: idDeCiclo(fecha) })
+      await agregarGasto({ descripcion, monto: centavos, categoriaId, metodo, fecha, cicloId: idDeCiclo(fecha) }, foto ?? undefined)
     }
     // Si corrigió la categoría que sugerían las claves, la app aprende la palabra.
     const porClaves = sugerir(donde, categorias, []).categoriaId
     if (categoriaElegida && categoriaElegida !== porClaves && donde.trim()) {
       for (const c of aprenderClaves(categorias, donde, categoriaElegida)) await guardarCategoria(c)
     }
-    alGuardar(meses ? `Guardado: ${descripcion} a ${meses} meses` : `Guardado: ${descripcion} ${pesos(centavos)}`)
+    alGuardar(meses ? `Guardado: ${descripcion} a ${meses} meses` : `Guardado: ${descripcion} ${pesos(centavos)}${foto ? ' con ticket' : ''}`)
+  }
+
+  const dictar = () => {
+    if (!Reconocimiento) return
+    if (escuchando) {
+      reconocimiento.current?.stop()
+      return
+    }
+    const r = new Reconocimiento()
+    r.lang = 'es-MX'
+    r.interimResults = false
+    r.maxAlternatives = 1
+    r.onresult = (e) => {
+      const frase = e.results[0]?.[0]?.transcript ?? ''
+      const campos = camposDesdeDictado(frase, categorias)
+      if (!campos) {
+        setAviso({ texto: `Escuché "${frase}" pero no encontré el monto. Di algo como: oxxo ochenta y cinco.`, tono: 'wine' })
+        return
+      }
+      setMonto(campos.monto)
+      setDonde(campos.donde)
+      setCategoriaElegida(campos.categoriaId)
+      setMetodoElegido(campos.metodo)
+      setMeses(campos.meses)
+      setError(null)
+      setAviso({ texto: `Escuché "${frase}". Revisa y guarda.`, tono: 'green' })
+    }
+    r.onerror = (e) => {
+      setAviso({ texto: e.error === 'not-allowed' ? 'Permite el micrófono en el navegador para dictar.' : 'No se escuchó nada. Intenta otra vez.', tono: 'wine' })
+    }
+    r.onend = () => setEscuchando(false)
+    reconocimiento.current = r
+    setAviso({ texto: 'Escuchando… di el lugar, el monto y cómo pagaste.', tono: 'muted' })
+    setEscuchando(true)
+    r.start()
   }
 
   const guardarChip = async (chip: Frecuente) => {
@@ -179,13 +221,38 @@ export function Captura({ alGuardar }: Props) {
         <button type="submit" className="primario acciones__principal" disabled={!centavos}>
           Guardar
         </button>
-        <button type="button" className="secundario" aria-label="Foto del ticket, próximamente" onClick={() => mostrarAviso('Foto del ticket: próximamente')}>
+        <input
+          ref={entradaFoto}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onChange={(e) => {
+            const archivo = e.target.files?.[0] ?? null
+            setFoto(archivo)
+            if (archivo) setAviso({ texto: 'Ticket adjunto. Se guarda junto con el gasto.', tono: 'green' })
+          }}
+        />
+        <button type="button" className={`secundario${foto ? ' secundario--activo' : ''}`} aria-label={foto ? 'Cambiar la foto del ticket' : 'Adjuntar foto del ticket'} onClick={() => entradaFoto.current?.click()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v12H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
         </button>
-        <button type="button" className="secundario" aria-label="Dictar el gasto, próximamente" onClick={() => mostrarAviso('Dictar un gasto: próximamente')}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0M12 17v4" /></svg>
-        </button>
+        {Reconocimiento && (
+          <button type="button" className={`secundario${escuchando ? ' secundario--escuchando' : ''}`} aria-label={escuchando ? 'Dejar de escuchar' : 'Dictar el gasto'} aria-pressed={escuchando} onClick={dictar}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M6 11a6 6 0 0 0 12 0M12 17v4" /></svg>
+          </button>
+        )}
       </div>
+      {(aviso || foto) && (
+        <div className="captura-aviso" role="status">
+          {aviso && <span className={`tono-${aviso.tono}`}>{aviso.texto}</span>}
+          {foto && !aviso && <span className="tono-muted">Ticket adjunto: {foto.name}</span>}
+          {foto && (
+            <button type="button" className="enlace-meta" onClick={() => { setFoto(null); setAviso(null); if (entradaFoto.current) entradaFoto.current.value = '' }}>
+              Quitar foto
+            </button>
+          )}
+        </div>
+      )}
     </form>
   )
 }
