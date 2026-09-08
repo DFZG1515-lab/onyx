@@ -58,6 +58,10 @@ Decisión del usuario (7 de septiembre de 2026): la hoja de nuevo gasto es un fo
 - Pasada de diseño (7 sep 2026): secciones con 48 px arriba; cabecera con marca y nombre en todas las pantallas; centavos menores en todos los montos (`.monto__centavos`); un solo acento por pantalla (comprometido y MSI en tinta; el anillo toma el color del ritmo); línea punteada de ritmo en la gráfica diaria; categorías del Resumen muestran su porcentaje solo al tocarlas; captura con monto formateado al escribir, categoría como chip plegable y meses/fecha detrás de "Más opciones"; Movimientos con la fecha en columna izquierda y montos de tarjeta en gris; el monto grande viaja entre pantallas (`heroeAnterior` en el store de UI); la barra inferior se esconde al bajar.
 - La lógica de análisis vive en `src/lib/analisis.ts` y la de respaldo en `src/lib/respaldo.ts`, ambas con pruebas.
 
+## Marca
+
+Piedra de ónix facetada: tinta con una cara verde (`src/componentes/Marca.tsx` para la interfaz, `public/icono.svg` para el ícono, PNG generados con `qlmanage`). Elegida el 7 de septiembre de 2026 entre cinco opciones; sustituyó a los tres renglones.
+
 ## Datos
 
 Todo el dinero en centavos, como enteros. Formatear con `Intl.NumberFormat('es-MX')` solo al renderizar. Fechas en epoch ms, hora local. Quincena Q1 del 1 al 15, Q2 del 16 al fin de mes; id `AAAA-MM-Q1`.

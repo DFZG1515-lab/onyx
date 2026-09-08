@@ -4,6 +4,7 @@ import { Aviso } from '../componentes/Aviso'
 import { BarraNavegacion } from '../componentes/BarraNavegacion'
 import { AvisoActualizacion, IndicadorConexion } from '../componentes/EstadoConexion'
 import { HojaCaptura } from '../componentes/HojaCaptura'
+import { Marca } from '../componentes/Marca'
 import { useCicloActual } from '../hooks/usePresupuesto'
 import { resumenDeCiclo } from '../lib/analisis'
 import { idAnterior } from '../lib/ciclos'
@@ -74,11 +75,7 @@ export function Marco() {
   return (
     <div className="app">
       <header className="cabecera">
-        <svg className="marca" width="20" height="20" viewBox="0 0 20 20" fill="none" strokeWidth="2.4" strokeLinecap="square" aria-hidden="true">
-          <line x1="2" y1="4" x2="18" y2="4" stroke="var(--ink)" />
-          <line x1="2" y1="10" x2="18" y2="10" stroke="var(--ink)" />
-          <line x1="2" y1="16" x2="18" y2="16" stroke="var(--green)" />
-        </svg>
+        <Marca className="marca" tamano={22} />
         <span className="cabecera__nombre">Onyx</span>
         <span className="cabecera__quincena">{ciclo ? `${rangoDeCiclo(ciclo)}` : ''}</span>
         <IndicadorConexion />

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Campo } from '../componentes/Campo'
 import { Hoja } from '../componentes/Hoja'
 import { IconoChevron, IconoPalomita } from '../componentes/Iconos'
+import { Marca } from '../componentes/Marca'
 import { pesos, pesosACentavos } from '../lib/dinero'
 import { useTienda } from '../store/tienda'
 import { useUI } from '../store/ui'
@@ -31,7 +32,7 @@ export function PrimerUso() {
   return (
     <div className="arranque">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" strokeWidth="2.4" strokeLinecap="square" aria-hidden="true"><line x1="2" y1="4" x2="18" y2="4" stroke="var(--ink)" /><line x1="2" y1="10" x2="18" y2="10" stroke="var(--ink)" /><line x1="2" y1="16" x2="18" y2="16" stroke="var(--green)" /></svg>
+        <Marca tamano={22} />
         <span style={{ fontWeight: 600 }}>Onyx</span>
       </div>
       <h1 className="arranque__titulo">¿Me alcanza?</h1>
