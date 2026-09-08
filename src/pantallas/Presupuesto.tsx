@@ -12,8 +12,12 @@ import { crearRespaldo, leerRespaldo } from '../lib/respaldo'
 import type { Categoria, Ciclo, Tema } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
 import { useUI } from '../store/ui'
+import { HojaCategoria } from './HojaCategoria'
 import { HojaIngreso } from './HojaIngreso'
+import { HojaIngresoExtra } from './HojaIngresoExtra'
 import { HojaTope } from './HojaTope'
+import { pesos } from '../lib/dinero'
+import { fechaCorta } from '../lib/fechas'
 
 const TEMAS: { valor: Tema; texto: string }[] = [
   { valor: 'sistema', texto: 'Sistema' },
@@ -30,11 +34,14 @@ export function Presupuesto() {
   const setHeroeAnterior = useUI((s) => s.setHeroeAnterior)
   const [editandoIngreso, setEditandoIngreso] = useState<Ciclo | null>(null)
   const [topeEnEdicion, setTopeEnEdicion] = useState<Categoria | null>(null)
+  const [categoriaEnEdicion, setCategoriaEnEdicion] = useState<Categoria | 'nueva' | null>(null)
+  const [agregandoIngreso, setAgregandoIngreso] = useState(false)
   const [confirmarBorrado, setConfirmarBorrado] = useState(false)
   const [respaldoPendiente, setRespaldoPendiente] = useState<ReturnType<typeof leerRespaldo>>(null)
   const entradaArchivo = useRef<HTMLInputElement>(null)
 
   const ingreso = ciclo?.ingresoEsperado ?? t.ajustes?.ingresoQuincenal ?? 0
+  const extrasDelCiclo = ciclo ? t.ingresos.filter((i) => i.cicloId === ciclo.id) : []
   const heroe = useContador(ingreso, heroeAnterior)
   useEffect(() => setHeroeAnterior(ingreso), [ingreso, setHeroeAnterior])
   const gastosDelCiclo = ciclo ? t.gastos.filter((g) => g.cicloId === ciclo.id) : []
@@ -59,7 +66,7 @@ export function Presupuesto() {
   }
 
   const exportar = () => {
-    const texto = crearRespaldo({ gastos: t.gastos, categorias: t.categorias, ciclos: t.ciclos, gastosFijos: t.gastosFijos, comprasMSI: t.comprasMSI, ajustes: t.ajustes }, hoy)
+    const texto = crearRespaldo({ gastos: t.gastos, categorias: t.categorias, ciclos: t.ciclos, gastosFijos: t.gastosFijos, comprasMSI: t.comprasMSI, ingresos: t.ingresos, deudas: t.deudas, ajustes: t.ajustes }, hoy)
     const url = URL.createObjectURL(new Blob([texto], { type: 'application/json' }))
     const a = document.createElement('a')
     a.href = url
@@ -132,6 +139,37 @@ export function Presupuesto() {
       </section>
 
       <section className="seccion">
+        <h2 className="seccion__titulo">Ingresos extra de esta quincena</h2>
+        {extrasDelCiclo.length === 0 ? (
+          <p className="meta" style={{ padding: '12px 0 4px' }}>Un bono o aguinaldo suma al disponible sin mover el ritmo esperado.</p>
+        ) : (
+          extrasDelCiclo.map((i, k) => (
+            <Fila key={i.id} indice={k} titulo={i.descripcion} meta={fechaCorta(i.fecha)} monto={<Monto centavos={i.monto} />} tono="green" onClick={() => void t.borrarIngreso(i.id).then(() => mostrarAviso(`Quitado: ${i.descripcion} ${pesos(i.monto)}`))} />
+          ))
+        )}
+        <button type="button" className="enlace agregar" onClick={() => setAgregandoIngreso(true)}>
+          Agregar ingreso extra
+        </button>
+      </section>
+
+      <section className="seccion">
+        <h2 className="seccion__titulo">Categorías</h2>
+        {t.categorias.map((c, i) => (
+          <Fila
+            key={c.id}
+            indice={i}
+            titulo={c.nombre}
+            meta={c.claves.length === 0 ? 'sin palabras clave' : c.claves.length === 1 ? '1 palabra clave' : `${c.claves.length} palabras clave`}
+            monto={<span className="tono-muted">Editar</span>}
+            onClick={() => setCategoriaEnEdicion(c)}
+          />
+        ))}
+        <button type="button" className="enlace agregar" onClick={() => setCategoriaEnEdicion('nueva')}>
+          Agregar categoría
+        </button>
+      </section>
+
+      <section className="seccion">
         <h2 className="seccion__titulo">Avisos</h2>
         <div className="interruptor">
           <div className="fila__texto">
@@ -178,6 +216,8 @@ export function Presupuesto() {
       </section>
 
       <HojaIngreso ciclo={editandoIngreso} onCerrar={() => setEditandoIngreso(null)} />
+      <HojaCategoria categoria={categoriaEnEdicion} onCerrar={() => setCategoriaEnEdicion(null)} />
+      <HojaIngresoExtra abierta={agregandoIngreso} hoy={hoy} onCerrar={() => setAgregandoIngreso(false)} />
       <HojaTope categoria={topeEnEdicion} sugerido={topeEnEdicion ? (sugeridos[topeEnEdicion.id] ?? null) : null} onCerrar={() => setTopeEnEdicion(null)} />
     </div>
   )
