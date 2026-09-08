@@ -5,6 +5,7 @@ import { BarraNavegacion } from '../componentes/BarraNavegacion'
 import { AvisoActualizacion, IndicadorConexion } from '../componentes/EstadoConexion'
 import { HojaCaptura } from '../componentes/HojaCaptura'
 import { Marca } from '../componentes/Marca'
+import { SinAlmacenamiento } from '../componentes/SinAlmacenamiento'
 import { useCicloActual } from '../hooks/usePresupuesto'
 import { resumenDeCiclo } from '../lib/analisis'
 import { idAnterior } from '../lib/ciclos'
@@ -17,6 +18,8 @@ import { PrimerUso } from './PrimerUso'
 /** Layout común: cabecera discreta, pantalla activa, barra inferior, hoja de captura y cierre de quincena. */
 export function Marco() {
   const listo = useTienda((s) => s.listo)
+  const errorAlmacenamiento = useTienda((s) => s.errorAlmacenamiento)
+  const cargarTodo = useTienda((s) => s.cargarTodo)
   const ajustes = useTienda((s) => s.ajustes)
   const ciclos = useTienda((s) => s.ciclos)
   const gastos = useTienda((s) => s.gastos)
@@ -58,6 +61,7 @@ export function Marco() {
   }, [listo, ajustes?.primerUsoCompleto, abrirCaptura])
 
   if (!listo) return null
+  if (errorAlmacenamiento) return <SinAlmacenamiento mensaje={errorAlmacenamiento} alReintentar={() => void cargarTodo()} />
   if (!ajustes?.primerUsoCompleto) return <PrimerUso />
 
   const anteriorId = ciclo ? idAnterior(ciclo.id) : null
