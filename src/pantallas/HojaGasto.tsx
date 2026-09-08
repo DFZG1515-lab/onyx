@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Campo } from '../componentes/Campo'
+import { FotoTicket } from '../componentes/FotoTicket'
 import { Hoja } from '../componentes/Hoja'
 import { aprenderClaves } from '../lib/aprendizaje'
 import { idDeCiclo } from '../lib/ciclos'
@@ -83,6 +84,7 @@ function Formulario({ gasto, onCerrar }: { gasto: Gasto; onCerrar: () => void })
       <Campo etiqueta="Fecha">
         <input className="entrada" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
       </Campo>
+      {gasto.fotoId && <FotoTicket fotoId={gasto.fotoId} />}
       <div className="formulario__acciones">
         <button type="submit" className="primario">
           Guardar

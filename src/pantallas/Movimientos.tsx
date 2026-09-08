@@ -85,7 +85,7 @@ export function Movimientos() {
                     <div className="fila__texto">
                       <span className="fila__titulo">{g.descripcion}</span>
                       <span className="fila__meta">
-                        {nombreDe(g.categoriaId)} · {g.metodo}
+                        {nombreDe(g.categoriaId)} · {g.metodo}{g.fotoId ? ' · ticket' : ''}
                       </span>
                     </div>
                     <Monto className="fila__monto" centavos={g.monto} />

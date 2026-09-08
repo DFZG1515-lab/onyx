@@ -9,7 +9,7 @@ export type GastoNuevo = Omit<Gasto, 'id' | 'creadoEn'>
 export type GastosSlice = {
   gastos: Gasto[]
   cargarGastos: () => Promise<void>
-  agregarGasto: (datos: GastoNuevo) => Promise<Gasto>
+  agregarGasto: (datos: GastoNuevo, foto?: Blob) => Promise<Gasto>
   actualizarGasto: (id: string, cambios: Partial<Omit<Gasto, 'id' | 'creadoEn'>>) => Promise<void>
   borrarGasto: (id: string) => Promise<void>
 }
@@ -22,8 +22,13 @@ export const crearGastosSlice: StateCreator<Tienda, [], [], GastosSlice> = (set,
     set({ gastos })
   },
 
-  agregarGasto: async (datos) => {
+  agregarGasto: async (datos, foto) => {
     const gasto: Gasto = { ...datos, id: nuevoId(), creadoEn: Date.now() }
+    if (foto) {
+      const fotoId = nuevoId()
+      await db.fotos.add({ id: fotoId, gastoId: gasto.id, blob: foto, creadoEn: gasto.creadoEn })
+      gasto.fotoId = fotoId
+    }
     await db.gastos.add(gasto)
     set({ gastos: [gasto, ...get().gastos] })
     return gasto
@@ -35,6 +40,7 @@ export const crearGastosSlice: StateCreator<Tienda, [], [], GastosSlice> = (set,
   },
 
   borrarGasto: async (id) => {
+    await db.fotos.where('gastoId').equals(id).delete()
     await db.gastos.delete(id)
     set({ gastos: get().gastos.filter((g) => g.id !== id) })
   },

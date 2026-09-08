@@ -14,6 +14,8 @@ export type Gasto = {
   fecha: number
   cicloId: string
   creadoEn: number
+  /** Id de la foto del ticket en la tabla `fotos`, si el usuario adjuntó una. */
+  fotoId?: string
 }
 
 export type Categoria = {
@@ -49,6 +51,13 @@ export type CompraMSI = {
   meses: number
   fechaCompra: number
   pagosHechos: number
+}
+
+export type Foto = {
+  id: string
+  gastoId: string
+  blob: Blob
+  creadoEn: number
 }
 
 export type Ajustes = {
