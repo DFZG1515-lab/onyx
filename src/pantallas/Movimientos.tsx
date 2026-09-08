@@ -6,7 +6,7 @@ import { Vacio } from '../componentes/Vacio'
 import { useAhora } from '../hooks/useAhora'
 import { diaCalendario } from '../lib/ciclos'
 import { pesos } from '../lib/dinero'
-import { etiquetaDiaLarga, fechaCorta } from '../lib/fechas'
+import { diaYMes, etiquetaDia, fechaCorta } from '../lib/fechas'
 import { normalizar } from '../lib/parser'
 import type { Gasto, Metodo } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
@@ -122,11 +122,13 @@ export function Movimientos() {
         <Vacio texto={hayFiltros || vacio ? vacio : ''} />
       ) : (
         [...porDia.entries()].map(([dia, lista]) => (
-          <section key={dia} className="dia">
-            <header className="dia__cabecera">
-              <span>{etiquetaDiaLarga(lista[0]?.fecha ?? hoy, hoy)}</span>
-              <Monto centavos={lista.reduce((s, g) => s + g.monto, 0)} />
-            </header>
+          <section key={dia} className="dia dia--columnas">
+            <div className="dia__fecha">
+              <span className="dia__nombre">{etiquetaDia(lista[0]?.fecha ?? hoy, hoy).split(' ')[0]}</span>
+              <span>{diaYMes(lista[0]?.fecha ?? hoy)}</span>
+              <Monto className="dia__subtotal" centavos={lista.reduce((s, g) => s + g.monto, 0)} conCentavos={false} />
+            </div>
+            <div className="dia__filas">
             {lista.map((g, i) => (
               <FilaDeslizable
                 key={g.id}
@@ -147,11 +149,12 @@ export function Movimientos() {
                         {nombreDe(g.categoriaId)} · {g.metodo} · {hora(g.fecha)}{g.fotoId ? ' · ticket' : ''}
                       </span>
                     </div>
-                    <Monto className="fila__monto" centavos={g.monto} />
+                    <Monto className={`fila__monto${g.metodo === 'efectivo' ? '' : ' tono-muted'}`} centavos={g.monto} />
                   </div>
                 </div>
               </FilaDeslizable>
             ))}
+            </div>
           </section>
         ))
       )}

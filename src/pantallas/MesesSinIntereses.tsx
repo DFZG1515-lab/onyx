@@ -1,9 +1,10 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Barra } from '../componentes/Barra'
 import { Fila } from '../componentes/Fila'
 import { Heroe } from '../componentes/Heroe'
 import { Monto } from '../componentes/Monto'
 import { Vacio } from '../componentes/Vacio'
+import { useContador } from '../hooks/useContador'
 import { useCicloActual } from '../hooks/usePresupuesto'
 import { proyeccionMSI } from '../lib/analisis'
 import { cicloDesdeId } from '../lib/ciclos'
@@ -12,6 +13,7 @@ import { etiquetaQuincena, mesCorto } from '../lib/fechas'
 import { avanceDeCompra, calendarioDePagos, fechaLiberacion, totalPendiente } from '../lib/msi'
 import type { CompraMSI } from '../lib/tipos'
 import { useTienda } from '../store/tienda'
+import { useUI } from '../store/ui'
 import { HojaMSI } from './HojaMSI'
 
 export function MesesSinIntereses() {
@@ -20,6 +22,10 @@ export function MesesSinIntereses() {
   const [enEdicion, setEnEdicion] = useState<CompraMSI | 'nueva' | null>(null)
 
   const pendiente = totalPendiente(compras, hoy)
+  const heroeAnterior = useUI((s) => s.heroeAnterior)
+  const setHeroeAnterior = useUI((s) => s.setHeroeAnterior)
+  const heroe = useContador(pendiente, heroeAnterior)
+  useEffect(() => setHeroeAnterior(pendiente), [pendiente, setHeroeAnterior])
   const libre = fechaLiberacion(compras)
   const activas = compras.filter((c) => avanceDeCompra(c, hoy).pendiente > 0)
   const terminadas = compras.filter((c) => avanceDeCompra(c, hoy).pendiente === 0)
@@ -31,7 +37,7 @@ export function MesesSinIntereses() {
     <div className="cascada">
       <section className="heroe-bloque">
         <p className="meta">¿Cuándo me libero? · te falta pagar</p>
-        <Heroe centavos={pendiente} tono="slate" />
+        <Heroe centavos={heroe} tono="slate" />
         {compras.length === 0 ? (
           <p className="meta" style={{ marginTop: 10 }}>Sin compras a meses sin intereses.</p>
         ) : libre && pendiente > 0 ? (

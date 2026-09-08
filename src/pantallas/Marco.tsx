@@ -25,6 +25,20 @@ export function Marco() {
   const abrirCaptura = useUI((s) => s.abrirCaptura)
   const { ciclo } = useCicloActual()
   const [cierreDescartado, setCierreDescartado] = useState(false)
+  const [navOculta, setNavOculta] = useState(false)
+
+  // La barra inferior se esconde al bajar y vuelve al subir: regala espacio a las listas largas.
+  useEffect(() => {
+    let ultimo = window.scrollY
+    const alDesplazar = () => {
+      const y = window.scrollY
+      if (y > ultimo + 6 && y > 80) setNavOculta(true)
+      else if (y < ultimo - 6 || y <= 80) setNavOculta(false)
+      ultimo = y
+    }
+    window.addEventListener('scroll', alDesplazar, { passive: true })
+    return () => window.removeEventListener('scroll', alDesplazar)
+  }, [])
 
   // Tema forzado desde ajustes.
   useEffect(() => {
@@ -60,7 +74,13 @@ export function Marco() {
   return (
     <div className="app">
       <header className="cabecera">
-        <span className="cabecera__quincena">{ciclo ? `Quincena del ${rangoDeCiclo(ciclo)}` : ''}</span>
+        <svg className="marca" width="20" height="20" viewBox="0 0 20 20" fill="none" strokeWidth="2.4" strokeLinecap="square" aria-hidden="true">
+          <line x1="2" y1="4" x2="18" y2="4" stroke="var(--ink)" />
+          <line x1="2" y1="10" x2="18" y2="10" stroke="var(--ink)" />
+          <line x1="2" y1="16" x2="18" y2="16" stroke="var(--green)" />
+        </svg>
+        <span className="cabecera__nombre">Onyx</span>
+        <span className="cabecera__quincena">{ciclo ? `${rangoDeCiclo(ciclo)}` : ''}</span>
         <IndicadorConexion />
       </header>
       <AvisoActualizacion />
@@ -68,7 +88,7 @@ export function Marco() {
         <Outlet />
       </main>
       <Aviso />
-      <BarraNavegacion />
+      <BarraNavegacion oculta={navOculta} />
       <HojaCaptura />
       <HojaCierre resumen={resumenCierre} nombreDe={nombreDe} onCerrar={cerrarCierre} />
     </div>

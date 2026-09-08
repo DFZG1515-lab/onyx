@@ -38,6 +38,9 @@ export function Resumen() {
   const entradaHecha = useUI((s) => s.entradaHecha)
   const marcarEntrada = useUI((s) => s.marcarEntrada)
   const setFiltroDia = useUI((s) => s.setFiltroDia)
+  const heroeAnterior = useUI((s) => s.heroeAnterior)
+  const setHeroeAnterior = useUI((s) => s.setHeroeAnterior)
+  const [categoriaAbierta, setCategoriaAbierta] = useState<string | null>(null)
   const mostrarAviso = useUI((s) => s.mostrarAviso)
   const ciclos = useTienda((s) => s.ciclos)
   const ajustes = useTienda((s) => s.ajustes)
@@ -55,7 +58,10 @@ export function Resumen() {
   const [editandoIngreso, setEditandoIngreso] = useState<Ciclo | null>(null)
 
   const cifraHeroe = datos ? (datos.presupuesto.excedido ? -datos.presupuesto.disponible : datos.presupuesto.porDia) : 0
-  const heroeAnimado = useContador(cifraHeroe, animarEntrada)
+  const heroeAnimado = useContador(cifraHeroe, animarEntrada ? 0 : heroeAnterior)
+  useEffect(() => {
+    if (datos) setHeroeAnterior(cifraHeroe)
+  }, [cifraHeroe, datos, setHeroeAnterior])
 
   if (!datos) return null
   const { ciclo, hoy, presupuesto: p, ritmo } = datos
@@ -144,7 +150,7 @@ export function Resumen() {
               </span>
             </div>
           </div>
-          <Anillo comprometido={p.ingreso > 0 ? p.comprometido / p.ingreso : 0} gastado={p.ingreso > 0 ? p.gastado / p.ingreso : 1} etiqueta="Ingreso usado o comprometido" animar={animarEntrada} />
+          <Anillo comprometido={p.ingreso > 0 ? p.comprometido / p.ingreso : 0} gastado={p.ingreso > 0 ? p.gastado / p.ingreso : 1} etiqueta="Ingreso usado o comprometido" animar={animarEntrada} tono={tonoHeroe} />
         </div>
 
         <div className="cifras">
@@ -160,7 +166,7 @@ export function Resumen() {
           </div>
           <div className="cifra">
             <span className="cifra__etiqueta">Comprometido</span>
-            <Monto className="cifra__valor tono-slate" centavos={p.comprometido} />
+            <Monto className="cifra__valor" centavos={p.comprometido} />
             <span className="cifra__sub">{queComprometido || 'nada pendiente'}</span>
           </div>
           <div className="cifra">
@@ -179,6 +185,7 @@ export function Resumen() {
           inicio={ciclo.inicio}
           etiquetaInicio={diaYMes(ciclo.inicio)}
           etiquetaFin={diaYMes(ciclo.fin)}
+          esperadoPorDia={Math.round(p.ingreso / datos.diasTotales)}
           alTocar={(i) => {
             setFiltroDia(ciclo.inicio + i * 86_400_000 + 12 * 3_600_000)
             navegar(RUTAS.movimientos)
@@ -220,9 +227,10 @@ export function Resumen() {
                 key={fila.categoriaId}
                 indice={i}
                 titulo={nombreDe(fila.categoriaId)}
-                meta={`${Math.round(parte * 100)} % del gasto${tope > 0 ? ` · tope ${pesos(tope, { centavos: false })}` : ''}`}
+                meta={categoriaAbierta === fila.categoriaId ? `${Math.round(parte * 100)} % del gasto${tope > 0 ? ` · tope ${pesos(tope, { centavos: false })}` : ' · sin tope'}` : undefined}
                 monto={<Monto centavos={fila.total} />}
                 tono={excedeTope ? 'wine' : 'ink'}
+                onClick={() => setCategoriaAbierta(categoriaAbierta === fila.categoriaId ? null : fila.categoriaId)}
                 pie={<Barra fraccion={parte} tono={excedeTope ? 'wine' : 'ink'} etiqueta={`Parte de ${nombreDe(fila.categoriaId)} en el gasto`} />}
               />
             )
@@ -238,7 +246,7 @@ export function Resumen() {
               <span className="fila__titulo">Meses sin intereses</span>
               <span className="fila__meta">{comprasMSI.length === 0 ? 'Sin compras a meses' : comprasMSI.length === 1 ? '1 compra' : `${comprasMSI.length} compras`}</span>
             </div>
-            <Monto className="fila__monto tono-slate" centavos={p.msi} />
+            <Monto className="fila__monto" centavos={p.msi} />
           </div>
         </Link>
         {gastosFijos.map((f, i) => {
@@ -250,7 +258,7 @@ export function Resumen() {
                   <span className="fila__titulo">{f.descripcion}</span>
                   <span className="fila__meta">{estado.texto}</span>
                 </div>
-                <Monto className={`fila__monto ${estado.pendiente ? 'tono-slate' : 'tono-muted'}`} centavos={f.monto} />
+                <Monto className={`fila__monto ${estado.pendiente ? '' : 'tono-muted'}`} centavos={f.monto} />
               </button>
               {estado.pendiente && (
                 <button type="button" className="enlace fila__accion" onClick={() => void marcarPagado(f)}>

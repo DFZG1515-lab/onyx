@@ -55,6 +55,7 @@ Decisión del usuario (7 de septiembre de 2026): la hoja de nuevo gasto es un fo
 - Meses sin intereses: proyección de las próximas siete quincenas, "Libre en", compras con avance.
 - Presupuesto: ingreso, topes por categoría con barra y sugerencia por historial, sin asignar, aviso al 80 %, tema (sistema, claro, oscuro), respaldo JSON (exportar, restaurar, borrar todo). Las fotos no van en el respaldo.
 - Primer uso: lista de tres pasos (ingreso, fijos, compras a meses). Cierre de quincena: hoja de una sola vez al abrir en una quincena nueva. Atajo del manifest `/?nuevo=1` abre la captura.
+- Pasada de diseño (7 sep 2026): secciones con 48 px arriba; cabecera con marca y nombre en todas las pantallas; centavos menores en todos los montos (`.monto__centavos`); un solo acento por pantalla (comprometido y MSI en tinta; el anillo toma el color del ritmo); línea punteada de ritmo en la gráfica diaria; categorías del Resumen muestran su porcentaje solo al tocarlas; captura con monto formateado al escribir, categoría como chip plegable y meses/fecha detrás de "Más opciones"; Movimientos con la fecha en columna izquierda y montos de tarjeta en gris; el monto grande viaja entre pantallas (`heroeAnterior` en el store de UI); la barra inferior se esconde al bajar.
 - La lógica de análisis vive en `src/lib/analisis.ts` y la de respaldo en `src/lib/respaldo.ts`, ambas con pruebas.
 
 ## Datos

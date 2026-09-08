@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Barra } from '../componentes/Barra'
 import { Fila } from '../componentes/Fila'
 import { Heroe } from '../componentes/Heroe'
 import { Monto } from '../componentes/Monto'
 import { useAhora } from '../hooks/useAhora'
+import { useContador } from '../hooks/useContador'
 import { useCicloActual } from '../hooks/usePresupuesto'
 import { sinAsignar, topesSugeridos } from '../lib/analisis'
 import { aFechaInput } from '../lib/fechas'
@@ -25,6 +26,8 @@ export function Presupuesto() {
   const { ciclo } = useCicloActual()
   const t = useTienda()
   const mostrarAviso = useUI((s) => s.mostrarAviso)
+  const heroeAnterior = useUI((s) => s.heroeAnterior)
+  const setHeroeAnterior = useUI((s) => s.setHeroeAnterior)
   const [editandoIngreso, setEditandoIngreso] = useState<Ciclo | null>(null)
   const [topeEnEdicion, setTopeEnEdicion] = useState<Categoria | null>(null)
   const [confirmarBorrado, setConfirmarBorrado] = useState(false)
@@ -32,6 +35,8 @@ export function Presupuesto() {
   const entradaArchivo = useRef<HTMLInputElement>(null)
 
   const ingreso = ciclo?.ingresoEsperado ?? t.ajustes?.ingresoQuincenal ?? 0
+  const heroe = useContador(ingreso, heroeAnterior)
+  useEffect(() => setHeroeAnterior(ingreso), [ingreso, setHeroeAnterior])
   const gastosDelCiclo = ciclo ? t.gastos.filter((g) => g.cicloId === ciclo.id) : []
   const cerrados = t.ciclos.filter((c) => c.fin < hoy).map((c) => c.id)
   const sugeridos = topesSugeridos(t.gastos, cerrados, t.categorias)
@@ -90,7 +95,7 @@ export function Presupuesto() {
     <div className="cascada">
       <section className="heroe-bloque">
         <p className="meta">¿Cómo lo reparto? · ingreso por quincena</p>
-        <Heroe centavos={ingreso} tono="ink" />
+        <Heroe centavos={heroe} tono="ink" />
         <div className="renglones-meta" style={{ justifyContent: 'space-between' }}>
           <span>{libre >= 0 ? 'Sin asignar' : 'Asignaste de más'}: <Monto centavos={libre} /></span>
           <button type="button" className="enlace-meta" onClick={() => ciclo && setEditandoIngreso(ciclo)}>
