@@ -50,6 +50,12 @@ export function idSiguiente(id: string): string {
   return mes === 12 ? idDePartes({ anio: anio + 1, mes: 1, quincena: 1 }) : idDePartes({ anio, mes: mes + 1, quincena: 1 })
 }
 
+export function idAnterior(id: string): string {
+  const { anio, mes, quincena } = partesDeId(id)
+  if (quincena === 2) return idDePartes({ anio, mes, quincena: 1 })
+  return mes === 1 ? idDePartes({ anio: anio - 1, mes: 12, quincena: 2 }) : idDePartes({ anio, mes: mes - 1, quincena: 2 })
+}
+
 /** Los n ciclos posteriores a `id`, en orden, sin incluirlo. */
 export function idsSiguientes(id: string, n: number): string[] {
   const ids: string[] = []

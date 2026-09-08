@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { cicloDeFecha, cicloDesdeId, diasDelCiclo, diasRestantes, idDeCiclo, idSiguiente, idsSiguientes } from './ciclos'
+import { cicloDeFecha, cicloDesdeId, diasDelCiclo, diasRestantes, idAnterior, idDeCiclo, idSiguiente, idsSiguientes } from './ciclos'
 
 const fecha = (a: number, m: number, d: number, h = 0, min = 0) => new Date(a, m - 1, d, h, min).getTime()
 
@@ -98,5 +98,13 @@ describe('diasRestantes', () => {
     expect(diasDelCiclo(cicloDesdeId('2026-09-Q2', 0))).toBe(15)
     expect(diasDelCiclo(cicloDesdeId('2026-10-Q2', 0))).toBe(16)
     expect(diasDelCiclo(cicloDesdeId('2026-02-Q2', 0))).toBe(13)
+  })
+})
+
+describe('idAnterior', () => {
+  test('Q2 pasa a Q1 del mismo mes y Q1 de enero al Q2 de diciembre anterior', () => {
+    expect(idAnterior('2026-09-Q2')).toBe('2026-09-Q1')
+    expect(idAnterior('2026-09-Q1')).toBe('2026-08-Q2')
+    expect(idAnterior('2027-01-Q1')).toBe('2026-12-Q2')
   })
 })
