@@ -6,10 +6,10 @@ import { IconoAjustes, IconoCalendarioRepetir, IconoGraficaCircular, IconoLista,
 const clase = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav__destino nav__destino--activo' : 'nav__destino')
 
 /** Barra fija abajo, al alcance del pulgar. Solo íconos; el centro abre la captura. */
-export function BarraNavegacion() {
+export function BarraNavegacion({ oculta = false }: { oculta?: boolean }) {
   const abrirCaptura = useUI((s) => s.abrirCaptura)
   return (
-    <nav className="nav" aria-label="Secciones">
+    <nav className={`nav${oculta ? ' nav--oculta' : ''}`} aria-label="Secciones">
       <NavLink to={RUTAS.resumen} end className={clase} aria-label="Resumen">
         <IconoGraficaCircular />
       </NavLink>

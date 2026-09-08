@@ -12,14 +12,17 @@ type Props = {
   inicio: number
   etiquetaInicio: string
   etiquetaFin: string
+  /** Gasto diario parejo: ingreso entre días. Se dibuja como línea punteada. */
+  esperadoPorDia: number
   alTocar: (indice: number) => void
 }
 
 const ALTO = 34
 
 /** Una barra por día del ciclo. Hoy en verde sólido, el día más caro en vino, el futuro en regla. */
-export function GraficaDiaria({ porDia, indiceHoy, diasFijos, inicio, etiquetaInicio, etiquetaFin, alTocar }: Props) {
-  const maximo = Math.max(...porDia, 1)
+export function GraficaDiaria({ porDia, indiceHoy, diasFijos, inicio, etiquetaInicio, etiquetaFin, esperadoPorDia, alTocar }: Props) {
+  const maximo = Math.max(...porDia, esperadoPorDia, 1)
+  const alturaRitmo = Math.round((esperadoPorDia / maximo) * ALTO)
   const caro = diaMasCaro(porDia)
   const hayGasto = caro !== null
   const contexto = hayGasto ? `el ${nombreDiaSemana(inicio + (caro - 1) * 86_400_000)} ${caro - 1 === indiceHoy ? 'llevas' : 'fue'} lo más caro` : 'todavía sin gastos'
@@ -31,6 +34,11 @@ export function GraficaDiaria({ porDia, indiceHoy, diasFijos, inicio, etiquetaIn
         <span>{contexto}</span>
       </div>
       <div className="grafica__dias">
+        {esperadoPorDia > 0 && (
+          <div className="grafica__ritmo" style={{ bottom: alturaRitmo }} title={`Gasto parejo: ${pesos(esperadoPorDia)} por día`} aria-hidden="true">
+            <span>ritmo</span>
+          </div>
+        )}
         {porDia.map((v, i) => {
           const futuro = indiceHoy >= 0 && i > indiceHoy
           const clases = ['barra-dia']
