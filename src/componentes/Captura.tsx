@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAhora } from '../hooks/useAhora'
+import { categoriasCercaDelTope } from '../lib/analisis'
 import { aprenderClaves } from '../lib/aprendizaje'
 import { idDeCiclo } from '../lib/ciclos'
 import { camposDesdeDictado } from '../lib/dictado'
@@ -27,6 +28,8 @@ export function Captura({ alGuardar }: Props) {
   const agregarGasto = useTienda((s) => s.agregarGasto)
   const agregarMSI = useTienda((s) => s.agregarMSI)
   const guardarCategoria = useTienda((s) => s.guardarCategoria)
+  const asegurarCiclo = useTienda((s) => s.asegurarCiclo)
+  const avisoTopes = useTienda((s) => s.ajustes?.avisoTopes !== false)
 
   const [monto, setMonto] = useState('')
   const [donde, setDonde] = useState('')
@@ -62,6 +65,7 @@ export function Captura({ alGuardar }: Props) {
       return
     }
     const descripcion = donde.trim() || nombreDe(categoriaId)
+    await asegurarCiclo(idDeCiclo(fecha))
     if (meses) {
       await agregarMSI({ descripcion, montoTotal: centavos, meses, fechaCompra: fecha, pagosHechos: 0 })
     } else {
@@ -72,7 +76,13 @@ export function Captura({ alGuardar }: Props) {
     if (categoriaElegida && categoriaElegida !== porClaves && donde.trim()) {
       for (const c of aprenderClaves(categorias, donde, categoriaElegida)) await guardarCategoria(c)
     }
-    alGuardar(meses ? `Guardado: ${descripcion} a ${meses} meses` : `Guardado: ${descripcion} ${pesos(centavos)}${foto ? ' con ticket' : ''}`)
+    let mensaje = meses ? `Guardado: ${descripcion} a ${meses} meses` : `Guardado: ${descripcion} ${pesos(centavos)}${foto ? ' con ticket' : ''}`
+    if (!meses && avisoTopes) {
+      const delCiclo = useTienda.getState().gastos.filter((g) => g.cicloId === idDeCiclo(fecha))
+      const cerca = categoriasCercaDelTope(delCiclo, categorias).find((c) => c.categoriaId === categoriaId)
+      if (cerca) mensaje += ` · ${nombreDe(categoriaId)} va al ${cerca.porcentaje} % de su tope`
+    }
+    alGuardar(mensaje)
   }
 
   const dictar = () => {

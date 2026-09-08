@@ -48,6 +48,15 @@ Voz activa, verbos concretos, sin relleno. "Guardar", no "Enviar". Los errores d
 
 Decisión del usuario (7 de septiembre de 2026): la hoja de nuevo gasto es un formulario por campos, no un campo de texto libre. Orden: cuánto (monto grande con teclado decimal), dónde o en qué, categoría en chips, método en segmentos, meses sin intereses en segmentos, fecha, chips de gastos frecuentes, y Guardar con cámara y micrófono como secundarios. La cámara adjunta la foto del ticket al gasto (tabla `fotos` de Dexie, v2; sin OCR). El micrófono dicta con el reconocimiento de voz del navegador (`src/lib/dictado.ts` convierte números dichos con palabras y llena los campos con el intérprete); se oculta donde el navegador no lo soporta. Ningún aviso debe mostrarse con el toast global mientras la hoja está abierta: el `<dialog>` lo tapa; los avisos de la captura van dentro de la hoja. La app sugiere categoría y método a partir del texto de "dónde" (`src/lib/sugerencias.ts`: primero el último gasto igual, luego las claves) y muestra la razón. Si el usuario corrige la categoría, la palabra se aprende. El intérprete de texto libre (`parser.ts`) sigue en el repo con sus pruebas para el dictado y la cámara futuros.
 
+## Pantallas y funciones
+
+- Resumen: héroe, anillo, chip de ritmo, rejilla de cifras, gráfica de gasto diario (tocar una barra filtra Movimientos a ese día), aviso de recurrente (misma descripción tres quincenas seguidas con montos dentro de un 20 %), categorías con barra, comprometido, quincenas anteriores con guardado acumulado.
+- Movimientos: buscador con espera de 200 ms, filtros por método, filtro por día, filas de 13/12/14 px, deslizar a la izquierda para borrar con deshacer de 5 segundos (el borrado se aplica al vencer o al salir de la pantalla), tocar para editar.
+- Meses sin intereses: proyección de las próximas siete quincenas, "Libre en", compras con avance.
+- Presupuesto: ingreso, topes por categoría con barra y sugerencia por historial, sin asignar, aviso al 80 %, tema (sistema, claro, oscuro), respaldo JSON (exportar, restaurar, borrar todo). Las fotos no van en el respaldo.
+- Primer uso: lista de tres pasos (ingreso, fijos, compras a meses). Cierre de quincena: hoja de una sola vez al abrir en una quincena nueva. Atajo del manifest `/?nuevo=1` abre la captura.
+- La lógica de análisis vive en `src/lib/analisis.ts` y la de respaldo en `src/lib/respaldo.ts`, ambas con pruebas.
+
 ## Datos
 
 Todo el dinero en centavos, como enteros. Formatear con `Intl.NumberFormat('es-MX')` solo al renderizar. Fechas en epoch ms, hora local. Quincena Q1 del 1 al 15, Q2 del 16 al fin de mes; id `AAAA-MM-Q1`.

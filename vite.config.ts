@@ -23,6 +23,9 @@ export default defineConfig({
           { src: '/icono-512.png', sizes: '512x512', type: 'image/png' },
           { src: '/icono-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        shortcuts: [
+          { name: 'Nuevo gasto', short_name: 'Nuevo gasto', url: '/?nuevo=1', icons: [{ src: '/icono-192.png', sizes: '192x192', type: 'image/png' }] },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
