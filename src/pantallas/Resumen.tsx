@@ -1,18 +1,21 @@
 import { useEffect, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Anillo } from '../componentes/Anillo'
 import { AvisoInstalacion } from '../componentes/AvisoInstalacion'
 import { Barra } from '../componentes/Barra'
 import { ChipRitmo } from '../componentes/ChipRitmo'
 import { Fila, type Tono } from '../componentes/Fila'
+import { GraficaDiaria } from '../componentes/GraficaDiaria'
 import { Heroe } from '../componentes/Heroe'
 import { Monto } from '../componentes/Monto'
 import { Vacio } from '../componentes/Vacio'
 import { useContador } from '../hooks/useContador'
 import { usePresupuesto } from '../hooks/usePresupuesto'
-import { idDeCiclo } from '../lib/ciclos'
+import { detectarRecurrente, gastoPorDia, historialDeCiclos } from '../lib/analisis'
+import { diaCalendario, idDeCiclo } from '../lib/ciclos'
 import { pesos } from '../lib/dinero'
-import { fechaCorta } from '../lib/fechas'
+import { diaYMes, fechaCorta, rangoDeCiclo } from '../lib/fechas'
+import { normalizar } from '../lib/parser'
 import { interpretar } from '../lib/parser'
 import { gastoPorCategoria, type EstadoRitmo } from '../lib/presupuesto'
 import type { Ciclo, GastoFijo } from '../lib/tipos'
@@ -34,6 +37,13 @@ export function Resumen() {
   const actualizarFijo = useTienda((s) => s.actualizarFijo)
   const entradaHecha = useUI((s) => s.entradaHecha)
   const marcarEntrada = useUI((s) => s.marcarEntrada)
+  const setFiltroDia = useUI((s) => s.setFiltroDia)
+  const mostrarAviso = useUI((s) => s.mostrarAviso)
+  const ciclos = useTienda((s) => s.ciclos)
+  const ajustes = useTienda((s) => s.ajustes)
+  const guardarAjustes = useTienda((s) => s.guardarAjustes)
+  const agregarFijo = useTienda((s) => s.agregarFijo)
+  const navegar = useNavigate()
 
   // La entrada se anima una sola vez por sesión; después todo responde solo a acciones.
   const [animarEntrada] = useState(() => !entradaHecha)
@@ -58,6 +68,45 @@ export function Resumen() {
   const tonoHeroe: Tono = p.excedido ? 'wine' : TONO_RITMO[ritmo.estado]
   const porcentaje = (parte: number) => (p.ingreso > 0 ? Math.round((parte / p.ingreso) * 100) : 0)
   const fijosPendientesN = gastosFijos.filter((f) => estadoDeFijo(f).pendiente).length
+  const porDia = gastoPorDia(gastos, ciclo)
+  const indiceHoy = hoy > ciclo.fin ? -1 : diaCalendario(hoy) - diaCalendario(ciclo.inicio)
+  const ultimoDia = new Date(new Date(ciclo.inicio).getFullYear(), new Date(ciclo.inicio).getMonth() + 1, 0).getDate()
+  const diasFijos = new Set(
+    gastosFijos
+      .filter((f) => f.activo)
+      .map((f) => new Date(new Date(ciclo.inicio).getFullYear(), new Date(ciclo.inicio).getMonth(), Math.min(f.diaDelMes, ultimoDia)).getTime())
+      .filter((ms) => ms >= ciclo.inicio && ms <= ciclo.fin)
+      .map((ms) => diaCalendario(ms) - diaCalendario(ciclo.inicio)),
+  )
+  const historial = historialDeCiclos(ciclos, gastos, comprasMSI, hoy)
+
+  // Recurrente: la primera descripción de esta quincena que se repite tres quincenas seguidas.
+  const ignorados = new Set(ajustes?.recurrentesIgnorados ?? [])
+  const fijosClaves = new Set(gastosFijos.map((f) => normalizar(f.descripcion.trim())))
+  const vistos = new Set<string>()
+  let recurrente = null as ReturnType<typeof detectarRecurrente>
+  let gastoRecurrente: (typeof gastos)[number] | null = null
+  for (const g of [...delCiclo].sort((a, b) => b.fecha - a.fecha)) {
+    const clave = normalizar(g.descripcion.trim())
+    if (!clave || vistos.has(clave) || ignorados.has(clave) || fijosClaves.has(clave)) continue
+    vistos.add(clave)
+    const r = detectarRecurrente(gastos, g.descripcion, ciclo.id)
+    if (r) {
+      recurrente = r
+      gastoRecurrente = g
+      break
+    }
+  }
+
+  const volverloFijo = async () => {
+    if (!recurrente || !gastoRecurrente) return
+    await agregarFijo({ descripcion: recurrente.descripcion, monto: recurrente.montoPromedio, diaDelMes: new Date(gastoRecurrente.fecha).getDate(), activo: true })
+    mostrarAviso(`${recurrente.descripcion} ya es gasto fijo`)
+  }
+  const ignorarRecurrente = async () => {
+    if (!recurrente) return
+    await guardarAjustes({ recurrentesIgnorados: [...ignorados, normalizar(recurrente.descripcion)] })
+  }
 
   function estadoDeFijo(f: GastoFijo): { texto: string; pendiente: boolean } {
     if (!f.activo) return { texto: 'Pausado', pendiente: false }
@@ -123,8 +172,20 @@ export function Resumen() {
             <span className="cifra__sub">{ritmo.diferencia >= 0 ? 'abajo de lo esperado' : 'arriba de lo esperado'}</span>
           </div>
         </div>
+        <GraficaDiaria
+          porDia={porDia}
+          indiceHoy={indiceHoy}
+          diasFijos={diasFijos}
+          inicio={ciclo.inicio}
+          etiquetaInicio={diaYMes(ciclo.inicio)}
+          etiquetaFin={diaYMes(ciclo.fin)}
+          alTocar={(i) => {
+            setFiltroDia(ciclo.inicio + i * 86_400_000 + 12 * 3_600_000)
+            navegar(RUTAS.movimientos)
+          }}
+        />
         <div className="renglones-meta">
-          <span>Día {datos.diasTotales - p.diasRestantes + 1} de {datos.diasTotales}</span>
+          <span>Día {Math.min(datos.diasTotales, datos.diasTotales - p.diasRestantes + 1)} de {datos.diasTotales}</span>
           <button type="button" className="enlace-meta" onClick={() => setEditandoIngreso(ciclo)}>
             Ingreso {pesos(p.ingreso, { centavos: false })}
           </button>
@@ -132,6 +193,18 @@ export function Resumen() {
       </section>
 
       <AvisoInstalacion />
+
+      {recurrente && (
+        <div className="recurrente" role="status">
+          <p>
+            Compras en {recurrente.descripcion} cada quincena, unos <Monto centavos={recurrente.montoPromedio} conCentavos={false} />. ¿Volverlo gasto fijo?
+          </p>
+          <div className="recurrente__acciones">
+            <button type="button" className="enlace" onClick={() => void volverloFijo()}>Volverlo fijo</button>
+            <button type="button" className="enlace" onClick={() => void ignorarRecurrente()}>Ignorar</button>
+          </div>
+        </div>
+      )}
 
       <section className="seccion">
         <h2 className="seccion__titulo">Gastado por categoría</h2>
@@ -191,6 +264,26 @@ export function Resumen() {
           Agregar gasto fijo
         </button>
       </section>
+
+      {historial.ciclos.length > 0 && (
+        <section className="seccion">
+          <h2 className="seccion__titulo">Quincenas anteriores</h2>
+          <div className="renglones-meta" style={{ justifyContent: 'space-between', marginTop: 8 }}>
+            <span>Guardado en total</span>
+            <Monto className="tono-green" centavos={historial.guardadoAcumulado} />
+          </div>
+          {historial.ciclos.slice(0, 6).map((r, i) => (
+            <Fila
+              key={r.cicloId}
+              indice={i}
+              titulo={rangoDeCiclo(r)}
+              meta={`Gastaste ${pesos(r.gastado, { centavos: false })}${r.diferenciaConAnterior === null ? '' : r.diferenciaConAnterior >= 0 ? ` · sobró ${pesos(r.diferenciaConAnterior, { centavos: false })} más que la anterior` : ` · sobró ${pesos(-r.diferenciaConAnterior, { centavos: false })} menos que la anterior`}`}
+              monto={<Monto centavos={r.sobrante} />}
+              tono={r.sobrante >= 0 ? 'green' : 'wine'}
+            />
+          ))}
+        </section>
+      )}
 
       <HojaFijo fijo={fijoEnEdicion} onCerrar={() => setFijoEnEdicion(null)} />
       <HojaIngreso ciclo={editandoIngreso} onCerrar={() => setEditandoIngreso(null)} />

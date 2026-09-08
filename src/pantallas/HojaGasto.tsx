@@ -26,6 +26,7 @@ function Formulario({ gasto, onCerrar }: { gasto: Gasto; onCerrar: () => void })
   const actualizarGasto = useTienda((s) => s.actualizarGasto)
   const borrarGasto = useTienda((s) => s.borrarGasto)
   const guardarCategoria = useTienda((s) => s.guardarCategoria)
+  const asegurarCiclo = useTienda((s) => s.asegurarCiclo)
 
   const [descripcion, setDescripcion] = useState(gasto.descripcion)
   const [monto, setMonto] = useState(String(gasto.monto / 100))
@@ -42,6 +43,7 @@ function Formulario({ gasto, onCerrar }: { gasto: Gasto; onCerrar: () => void })
     if (!centavos) return setError('Escribe un monto mayor a cero. Por ejemplo: 85')
     if (!fechaMs) return setError('Elige una fecha')
 
+    await asegurarCiclo(idDeCiclo(fechaMs))
     await actualizarGasto(gasto.id, { descripcion: descripcion.trim(), monto: centavos, categoriaId, metodo, fecha: fechaMs, cicloId: idDeCiclo(fechaMs) })
     if (categoriaId !== gasto.categoriaId) {
       for (const c of aprenderClaves(categorias, descripcion, categoriaId)) await guardarCategoria(c)
