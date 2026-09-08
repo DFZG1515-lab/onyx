@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { pesos, pesosACentavos, segmentarDigitos } from './dinero'
+import { formatearEntradaMonto, pesos, pesosACentavos, segmentarDigitos } from './dinero'
 
 describe('pesos', () => {
   test('formatea centavos como pesos mexicanos', () => {
@@ -50,5 +50,28 @@ describe('segmentarDigitos', () => {
   test('un texto sin dígitos queda en un solo segmento', () => {
     expect(segmentarDigitos('$')).toEqual([{ digitos: false, texto: '$' }])
     expect(segmentarDigitos('')).toEqual([])
+  })
+})
+
+describe('formatearEntradaMonto', () => {
+  test('pone separadores de miles mientras se escribe', () => {
+    expect(formatearEntradaMonto('15000')).toBe('15,000')
+    expect(formatearEntradaMonto('1250.5')).toBe('1,250.5')
+    expect(formatearEntradaMonto('85')).toBe('85')
+  })
+
+  test('acepta lo que ya trae comas y lo reacomoda', () => {
+    expect(formatearEntradaMonto('1,5000')).toBe('15,000')
+  })
+
+  test('permite un solo punto y hasta dos decimales', () => {
+    expect(formatearEntradaMonto('85.')).toBe('85.')
+    expect(formatearEntradaMonto('85.505')).toBe('85.50')
+    expect(formatearEntradaMonto('8.5.5')).toBe('8.55')
+  })
+
+  test('quita todo lo que no sea número o punto', () => {
+    expect(formatearEntradaMonto('$1a2b3')).toBe('123')
+    expect(formatearEntradaMonto('')).toBe('')
   })
 })

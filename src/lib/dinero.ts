@@ -30,3 +30,13 @@ export function segmentarDigitos(texto: string): Segmento[] {
   }
   return segmentos
 }
+
+/** "15000" → "15,000" mientras se escribe. Un solo punto, hasta dos decimales, nada más que dígitos. */
+export function formatearEntradaMonto(texto: string): string {
+  const limpio = texto.replace(/[^\d.]/g, '')
+  const punto = limpio.indexOf('.')
+  const enteros = (punto === -1 ? limpio : limpio.slice(0, punto)).replace(/^0+(?=\d)/, '')
+  const decimales = punto === -1 ? null : limpio.slice(punto + 1).replace(/\./g, '').slice(0, 2)
+  const conComas = enteros.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return decimales === null ? conComas : `${conComas}.${decimales}`
+}
