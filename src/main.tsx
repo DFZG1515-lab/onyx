@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { LimiteDeErrores } from './componentes/LimiteDeErrores'
 import { iniciarPWA } from './pwa/registro'
 import { useTienda } from './store/tienda'
 import './styles/index.css'
@@ -13,6 +14,8 @@ if (!raiz) throw new Error('No existe el elemento #raiz en index.html')
 
 createRoot(raiz).render(
   <StrictMode>
-    <App />
+    <LimiteDeErrores>
+      <App />
+    </LimiteDeErrores>
   </StrictMode>,
 )
